@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>厝邊平安鈴｜獨居長輩每日問安</title>
+<meta name="description" content="長輩每天按一下「我今天平安」，志工與里長用點名板掌握狀況。正修科技大學 USR × 厝邊快報。">
+<meta name="theme-color" content="#1F5F73">
+<link rel="apple-touch-icon" id="touchIcon" href="">
+<style>
+  :root{
+    --paper:#FBF5E9;--vermilion:#B5372A;--vermilion-deep:#8E2A20;
+    --ink:#33302A;--gold:#A8781F;--civic:#1F5F73;--jade:#2E7D5B;--amber:#C27A12;
+    --card:#FFFFFF;--line:#E4D9C3;--mute:#87806F;--shadow:0 4px 16px rgba(51,48,42,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{font-size:17px}
+  body{font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;background:var(--paper);
+    color:var(--ink);line-height:1.6;min-height:100vh}
+  button,input,select,textarea{font-family:inherit;font-size:1rem;color:inherit}
+  button{cursor:pointer}
+  button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .hide{display:none!important}
+  .wrap{max-width:760px;margin:0 auto;padding:18px 14px 110px}
+
+  /* ───── 點名板 ───── */
+  header.bar{background:var(--civic);color:#FDF6E9;border-radius:20px;padding:18px 18px 16px;box-shadow:0 8px 22px rgba(31,95,115,.25)}
+  header.bar .row{display:flex;align-items:center;gap:12px}
+  .bell{width:54px;height:54px;flex:0 0 54px;border-radius:50%;border:3px solid #FDF6E9;display:flex;
+    align-items:center;justify-content:center;font-size:1.7rem;background:rgba(253,246,233,.1)}
+  header.bar h1{font-family:"Noto Serif TC","PMingLiU",serif;font-size:1.6rem;letter-spacing:3px;font-weight:900}
+  header.bar p{font-size:.9rem;opacity:.9}
+  .today{margin-top:10px;font-size:.95rem;opacity:.95}
+  .notice{margin-top:14px;background:#FFF4E8;border:1.5px solid #EBC9A0;border-radius:12px;padding:10px 12px;
+    font-size:.88rem;color:#7A4A12;line-height:1.55}
+  .notice b{color:var(--vermilion)}
+
+  .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .sum{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center;box-shadow:var(--shadow)}
+  .sum b{display:block;font-size:1.7rem;line-height:1.2}
+  .sum span{font-size:.82rem;color:var(--mute)}
+  .sum.ok b{color:var(--jade)} .sum.wait b{color:var(--mute)} .sum.alert b{color:var(--vermilion)}
+
+  .tools{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .btn{border:2px solid var(--civic);background:#fff;color:var(--civic);border-radius:12px;padding:10px 12px;
+    font-weight:800;flex:1;min-width:110px}
+  .btn.primary{background:var(--civic);color:#fff}
+  .btn.ghost{border-color:var(--line);color:var(--ink)}
+  .btn.danger{border-color:var(--vermilion);color:var(--vermilion)}
+  .btn.jade{background:var(--jade);border-color:var(--jade);color:#fff}
+  .btn.amber{border-color:var(--amber);color:var(--amber)}
+  .btn.red{border-color:var(--vermilion);background:var(--vermilion);color:#fff}
+  .btn.sm{padding:7px 10px;font-size:.9rem;min-width:0}
+
+  .empty{margin-top:18px;background:var(--card);border:2px dashed var(--line);border-radius:16px;padding:26px 18px;text-align:center;color:var(--mute)}
+  .empty b{display:block;color:var(--ink);font-size:1.1rem;margin-bottom:6px}
+
+  .elder{background:var(--card);border:1px solid var(--line);border-left:8px solid var(--line);border-radius:16px;
+    padding:14px 14px 12px;margin-top:12px;box-shadow:var(--shadow)}
+  .elder.s-ok,.elder.s-call{border-left-color:var(--jade)}
+  .elder.s-help{border-left-color:var(--amber)}
+  .elder.s-miss,.elder.s-late{border-left-color:var(--vermilion)}
+  .e-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .e-name{font-size:1.25rem;font-weight:900;letter-spacing:1px}
+  .e-meta{font-size:.84rem;color:var(--mute)}
+  .pill{border-radius:30px;padding:4px 12px;font-size:.88rem;font-weight:800;white-space:nowrap}
+  .pill.ok,.pill.call{background:#E3F2EA;color:var(--jade)}
+  .pill.help{background:#FBEFD9;color:var(--amber)}
+  .pill.miss,.pill.late{background:#F9E2DE;color:var(--vermilion)}
+  .pill.wait{background:#F0ECE3;color:var(--mute)}
+  .week{display:flex;gap:5px;margin:10px 0 4px;align-items:center;font-size:.78rem;color:var(--mute)}
+  .dot{width:16px;height:16px;border-radius:50%;background:#EDE7DA;display:inline-block}
+  .dot.ok,.dot.call{background:var(--jade)} .dot.help{background:var(--amber)} .dot.miss{background:var(--vermilion)}
+  .e-acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .e-note{font-size:.86rem;background:#F7F3EC;border-radius:10px;padding:6px 10px;margin-top:8px}
+  .more{margin-top:8px;border-top:1px dashed var(--line);padding-top:8px}
+
+  /* 對話框 */
+  #dlg{position:fixed;inset:0;background:rgba(51,48,42,.45);display:none;z-index:50;align-items:flex-end;justify-content:center}
+  #dlg.on{display:flex}
+  .sheet{background:var(--paper);width:100%;max-width:760px;border-radius:22px 22px 0 0;padding:20px 18px 28px;max-height:90vh;overflow:auto}
+  .sheet h2{font-size:1.2rem;letter-spacing:2px;margin-bottom:6px}
+  .sheet p.d{font-size:.86rem;color:var(--mute);margin-bottom:6px;line-height:1.6}
+  label.f{display:block;font-weight:700;margin:12px 0 5px}
+  label.f small{font-weight:400;color:var(--mute)}
+  input[type=text],input[type=tel],input[type=time],select,textarea{width:100%;border:2px solid var(--line);
+    border-radius:12px;background:#FFFDF8;padding:11px 12px}
+  textarea{min-height:70px;resize:vertical}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .radio{display:flex;gap:8px;flex-wrap:wrap}
+  .radio label{flex:1;min-width:130px;border:2px solid var(--line);border-radius:12px;padding:10px;background:#FFFDF8;
+    display:flex;gap:8px;align-items:flex-start;font-size:.92rem;cursor:pointer}
+  .radio input{margin-top:4px}
+  .consent{display:flex;gap:10px;align-items:flex-start;margin-top:14px;background:#FFF4E8;border-radius:12px;padding:10px 12px;font-size:.9rem}
+  .consent input{width:22px;height:22px;flex:0 0 22px;margin-top:2px}
+  .msg{min-height:1.3em;margin-top:10px;font-size:.9rem;color:var(--civic)}
+  .msg.err{color:var(--vermilion)}
+
+  footer.credit{margin-top:30px;text-align:center;font-size:.8rem;color:var(--mute);line-height:1.8}
+  footer.credit a{color:var(--civic)}
+
+  /* ───── 長輩畫面 ───── */
+  #elderView{min-height:100vh;display:flex;flex-direction:column;padding:18px 16px 20px;max-width:560px;margin:0 auto}
+  .ev-hello{font-family:"Noto Serif TC","PMingLiU",serif;font-size:2.3rem;font-weight:900;letter-spacing:2px;line-height:1.3}
+  .ev-date{font-size:1.35rem;margin-top:4px;color:var(--civic);font-weight:700}
+  .ev-preview{background:var(--gold);color:#fff;border-radius:10px;padding:6px 12px;font-size:.9rem;margin-bottom:10px;text-align:center}
+  #okBtn{margin-top:16px;flex:1 1 auto;min-height:38vh;border:none;border-radius:32px;
+    background:linear-gradient(165deg,#3A9A70,var(--jade));color:#fff;box-shadow:0 12px 28px rgba(46,125,91,.35);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:transform .12s}
+  #okBtn:active{transform:scale(.98)}
+  #okBtn .big{font-size:4.6rem;line-height:1}
+  #okBtn .t{font-size:2.3rem;font-weight:900;letter-spacing:4px}
+  #okBtn .s{font-size:1.1rem;opacity:.95}
+  #okBtn.done{background:linear-gradient(165deg,#6FAF90,#4D8F72)}
+  .ev-status{margin-top:12px;font-size:1.25rem;text-align:center;font-weight:800;color:var(--jade);min-height:1.6em}
+  .ev-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .ev-btn{border:none;border-radius:20px;padding:18px 8px;font-size:1.35rem;font-weight:900;color:#fff;
+    display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;text-align:center}
+  .ev-btn small{font-size:.95rem;font-weight:600;opacity:.95}
+  .ev-help{background:var(--amber)}
+  .ev-call{background:var(--civic)}
+  .ev-119{background:var(--vermilion);margin-top:12px;width:100%;flex-direction:row;justify-content:center;gap:10px;font-size:1.3rem}
+  .ev-streak{margin-top:14px;text-align:center;font-size:1.05rem;color:var(--ink)}
+  .ev-streak b{color:var(--jade);font-size:1.3rem}
+  .ev-foot{margin-top:14px;display:flex;justify-content:space-between;align-items:center;font-size:.85rem;color:var(--mute)}
+  .ev-foot button{background:none;border:none;color:var(--mute);text-decoration:underline;font-size:.85rem}
+  .speakBtn{background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 10px;font-size:1rem;font-weight:800;flex:0 0 auto;white-space:nowrap}
+  .ev-setup{background:#E7F1F4;border-radius:14px;padding:12px 14px;margin-top:12px;font-size:1rem;line-height:1.7}
+  .ev-setup b{color:var(--civic)}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ═════════════ 點名板（志工／里長）═════════════ -->
+<div id="boardView" class="wrap hide">
+  <header class="bar">
+    <div class="row">
+      <div class="bell" aria-hidden="true">🔔</div>
+      <div>
+        <h1>厝邊平安鈴</h1>
+        <p id="boardSub">志工・里長點名板</p>
+      </div>
+    </div>
+    <div class="today" id="todayTxt"></div>
+  </header>
+
+  <div class="notice">
+    平安鈴是<b>關懷輔助</b>，不是緊急救護。遇到跌倒、昏迷、呼吸困難等緊急狀況，請直接撥 <b>119</b>。
+    長輩按「我今天平安」會傳簡訊給志工；志工收到後在這裡按「收到平安」，逾時未回報的長輩會排到最上面。
+  </div>
+
+  <div class="summary">
+    <div class="sum ok"><b id="nOk">0</b><span>今天已平安</span></div>
+    <div class="sum wait"><b id="nWait">0</b><span>等待回報</span></div>
+    <div class="sum alert"><b id="nAlert">0</b><span>需要處理</span></div>
+  </div>
+
+  <div class="tools">
+    <button class="btn primary" id="addBtn" type="button">＋ 新增長輩</button>
+    <button class="btn ghost" id="cfgBtn" type="button">⚙️ 志工與里長</button>
+    <button class="btn ghost" id="dataBtn" type="button">📊 紀錄與備份</button>
+  </div>
+
+  <div id="list"></div>
+
+  <footer class="credit">
+    <b>厝邊平安鈴</b>｜<a href="index.html">回厝邊快報</a>｜<a href="movejoy.html">樂動 365</a><br>
+    正修科技大學 招生處 × 大學社會責任（USR）｜資料只存在這支手機
+  </footer>
+</div>
+
+<!-- ═════════════ 長輩畫面 ═════════════ -->
+<div id="elderView" class="hide">
+  <div class="ev-preview hide" id="evPreview">👁 預覽模式：這是長輩手機會看到的畫面（按鈕不會真的傳送）</div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+    <div class="ev-hello" id="evHello">早安</div>
+    <button class="speakBtn" id="evSpeak" type="button" aria-label="念給我聽">🔊 念給我聽</button>
+  </div>
+  <div class="ev-date" id="evDate"></div>
+  <div class="ev-setup hide" id="evSetup"></div>
+
+  <button id="okBtn" type="button">
+    <span class="big" aria-hidden="true">✅</span>
+    <span class="t">我今天平安</span>
+    <span class="s" id="okSub">按一下，告訴志工</span>
+  </button>
+  <div class="ev-status" id="evStatus" role="status" aria-live="polite"></div>
+
+  <div class="ev-row">
+    <button class="ev-btn ev-help" id="helpBtn" type="button">🙋 我需要幫忙<small>請志工打給我</small></button>
+    <a class="ev-btn ev-call" id="callVol" href="#">📞 打給志工<small id="volName">志工</small></a>
+  </div>
+  <a class="ev-btn ev-119" href="tel:119">🚑 緊急狀況　撥 119</a>
+
+  <div class="ev-streak" id="evStreak"></div>
+  <div class="ev-foot">
+    <span id="evLi"></span>
+    <button type="button" id="evSettings">家人設定</button>
+  </div>
+</div>
+
+<!-- ═════════════ 對話框 ═════════════ -->
+<div id="dlg"><div class="sheet" id="sheet"></div></div>
+
+<script>
+/* ══════════ 基礎工具 ══════════ */
+const mem={};
+const store={
+  get(k){try{return localStorage.getItem(k)??mem[k]??null;}catch(e){return mem[k]??null;}},
+  set(k,v){mem[k]=v;try{localStorage.setItem(k,v);}catch(e){}},
+  del(k){delete mem[k];try{localStorage.removeItem(k);}catch(e){}},
+  json(k,def){try{const v=this.get(k);return v?JSON.parse(v):def;}catch(e){return def;}},
+  put(k,o){this.set(k,JSON.stringify(o));}
+};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const WEEK="日一二三四五六";
+function dkey(d=new Date()){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+function hm(d=new Date()){return pad(d.getHours())+":"+pad(d.getMinutes());}
+function mdw(d=new Date()){return (d.getMonth()+1)+"/"+d.getDate()+"（"+WEEK[d.getDay()]+"）";}
+function b64enc(str){const by=new TextEncoder().encode(str);let bin="";by.forEach(b=>bin+=String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");}
+function b64dec(s){s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";
+  return new TextDecoder().decode(Uint8Array.from(atob(s),c=>c.charCodeAt(0)));}
+const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+function telHref(p){return "tel:"+String(p||"").replace(/[^\d+]/g,"");}
+function smsHref(p,body){const n=String(p||"").replace(/[^\d+]/g,"");return "sms:"+n+(isIOS?"&":"?")+"body="+encodeURIComponent(body);}
+function lineShare(text){return "https://line.me/R/share?text="+encodeURIComponent(text);}
+function go(url){const a=document.createElement("a");a.href=url;a.rel="noopener";
+  if(url.startsWith("http"))a.target="_blank";document.body.appendChild(a);a.click();a.remove();}
+async function copyText(t){try{await navigator.clipboard.writeText(t);}catch(e){
+  const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();}}
+function download(name,text,type){const blob=new Blob([text],{type});const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);}
+function appUrl(){return /github\.io$/.test(location.hostname)?(location.origin+location.pathname):"https://k6758-beep.github.io/Village7/peace.html";}
+
+/* 語音（長輩畫面用） */
+let zhVoice=null;
+function pickVoice(){try{const vs=speechSynthesis.getVoices();zhVoice=vs.find(v=>/zh[-_]TW/i.test(v.lang))||vs.find(v=>/zh/i.test(v.lang))||null;}catch(e){}}
+if("speechSynthesis" in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+function say(t){try{if(!("speechSynthesis" in window))return;speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t);u.lang="zh-TW";u.rate=.88;if(zhVoice)u.voice=zhVoice;speechSynthesis.speak(u);}catch(e){}}
+
+/* ══════════ 資料 ══════════
+   pb_elders：長輩名冊（只在志工手機）
+   pb_log   ：每日狀態 {日期:{長輩id:{st,t,note}}}
+   pb_cfg   ：志工與里長聯絡方式
+   pb_elder ：長輩手機上的設定（只有稱呼、志工電話、截止時間）              */
+const ST={ok:"平安（自己回報）",call:"電話問安，平安",help:"需要協助",miss:"聯絡不上"};
+let elders=store.json("pb_elders",[]);
+let log=store.json("pb_log",{});
+let cfg=Object.assign({vn:"",vp:"",cp:"",li:""},store.json("pb_cfg",{}));
+/* 與厝邊快報共用「里的資料」（同一網域） */
+if(!cfg.li)cfg.li=store.get("li")||"";
+if(!cfg.cp)cfg.cp=store.get("mobile")||"";
+function liName(){const v=(cfg.li||"").trim();return v?(v.endsWith("里")?v:v+"里"):"";}
+function saveAll(){store.put("pb_elders",elders);store.put("pb_log",log);store.put("pb_cfg",cfg);}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function mins(t){const m=String(t||"10:00").match(/(\d{1,2}):(\d{2})/);return m?(+m[1]*60+ +m[2]):600;}
+function statusOf(e,d=new Date()){
+  const r=(log[dkey(d)]||{})[e.id];
+  if(r)return {k:r.st,label:ST[r.st]+"・"+r.t,rec:r};
+  const now=d.getHours()*60+d.getMinutes();
+  if(now>=mins(e.t))return {k:"late",label:"過了 "+e.t+" 還沒回報"};
+  return {k:"wait",label:"等待回報（"+e.t+" 前）"};
+}
+function setStatus(id,st,note){
+  const k=dkey();log[k]=log[k]||{};
+  if(st===null){delete log[k][id];}
+  else log[k][id]={st,t:hm(),note:note||""};
+  saveAll();renderBoard();
+}
+
+/* ══════════ 點名板畫面 ══════════ */
+function renderBoard(){
+  $("todayTxt").textContent="今天 "+mdw()+"　"+(liName()||"（尚未設定里名）")+(cfg.vn?"　志工 "+cfg.vn:"");
+  $("boardSub").textContent=(liName()?liName()+"・":"")+"志工・里長點名板";
+  const list=$("list");list.innerHTML="";
+  let nOk=0,nWait=0,nAlert=0;
+  if(!elders.length){
+    list.innerHTML=`<div class="empty"><b>還沒有長輩名單</b>按「＋ 新增長輩」開始。<br>請先取得長輩（或家屬）的同意，並由長青中心或關懷據點轉介個案。</div>`;
+  }
+  const order={late:0,miss:1,help:2,wait:3,ok:4,call:4};
+  const rows=elders.map(e=>({e,s:statusOf(e)})).sort((a,b)=>order[a.s.k]-order[b.s.k]||mins(a.e.t)-mins(b.e.t));
+  rows.forEach(({e,s})=>{
+    if(s.k==="ok"||s.k==="call")nOk++;else if(s.k==="wait")nWait++;else nAlert++;
+    const card=document.createElement("div");
+    card.className="elder s-"+s.k;
+    /* 近 7 天 */
+    let dots="";
+    for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);
+      const r=(log[dkey(d)]||{})[e.id];dots+=`<span class="dot ${r?r.st:""}" title="${mdw(d)} ${r?ST[r.st]:"無紀錄"}"></span>`;}
+    const selfMode=e.mode==="self";
+    const needNotify=["late","miss","help"].includes(s.k);
+    card.innerHTML=`
+      <div class="e-top">
+        <div><div class="e-name">${esc(e.n)}</div>
+          <div class="e-meta">${selfMode?"長輩自己按平安鈴":"志工每天打電話問安"}・${esc(e.t)} 前${e.note?"・"+esc(e.note):""}</div></div>
+        <span class="pill ${s.k}">${esc(s.label)}</span>
+      </div>
+      <div class="week">近 7 天 ${dots}</div>
+      ${s.rec&&s.rec.note?`<div class="e-note">📝 ${esc(s.rec.note)}</div>`:""}
+      <div class="e-acts">
+        ${(s.k==="ok"||s.k==="call")
+          ?`<button class="btn sm ghost" data-a="undo" type="button">↩ 取消今天的紀錄</button>`
+          :`<button class="btn sm jade" data-a="${selfMode?"ok":"call"}" type="button">✅ ${selfMode?"收到平安":"電話問安平安"}</button>`}
+        ${e.phone?`<a class="btn sm" href="${telHref(e.phone)}">📞 打給長輩</a>`:""}
+      </div>
+      ${(s.k==="ok"||s.k==="call")?"":`<div class="e-acts">
+        <button class="btn sm amber" data-a="help" type="button">🙋 需要協助</button>
+        <button class="btn sm danger" data-a="miss" type="button">❌ 聯絡不上</button>
+      </div>`}
+      ${needNotify?`<div class="e-acts">
+        ${e.ecp?`<button class="btn sm red" data-a="nfam" type="button">📣 通知${esc(e.ecn||"家屬")}</button>`:""}
+        ${cfg.cp?`<button class="btn sm red" data-a="nchief" type="button">📣 通知里長</button>`:""}
+        ${(!e.ecp&&!cfg.cp)?`<span class="e-meta">尚未設定家屬或里長電話，請到「編輯」或「志工與里長」補上。</span>`:""}
+      </div>`:""}
+      <div class="e-acts">
+        <button class="btn sm ghost" data-a="link" type="button">🔗 長輩專屬連結</button>
+        <button class="btn sm ghost" data-a="preview" type="button">👁 預覽長輩畫面</button>
+        <button class="btn sm ghost" data-a="edit" type="button">✏️ 編輯</button>
+      </div>`;
+    card.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>act(e,b.dataset.a));
+    list.appendChild(card);
+  });
+  $("nOk").textContent=nOk;$("nWait").textContent=nWait;$("nAlert").textContent=nAlert;
+}
+
+function reasonText(e){
+  const s=statusOf(e);
+  if(s.k==="help")return "表示需要協助";
+  if(s.k==="miss")return "今天聯絡不上（電話沒有接）";
+  return "到 "+e.t+" 還沒有回報平安";
+}
+function act(e,a){
+  if(a==="ok"||a==="call")return setStatus(e.id,a);
+  if(a==="undo")return setStatus(e.id,null);
+  if(a==="help"||a==="miss"){
+    openSheet(`<h2>${a==="help"?"🙋 需要協助":"❌ 聯絡不上"}：${esc(e.n)}</h2>
+      <p class="d">可以寫一句狀況（選填），方便里長或下一位志工接手。不要寫病歷或身分證等資料。</p>
+      <textarea id="stNote" placeholder="${a==="help"?"例：腳痛想看醫生，需要陪同":"例：10:20、10:40 各打一次都沒接"}"></textarea>
+      <div class="tools"><button class="btn primary" id="stSave" type="button">記錄</button>
+      <button class="btn ghost" id="stCancel" type="button">取消</button></div>`);
+    $("stSave").onclick=()=>{setStatus(e.id,a,$("stNote").value.trim().slice(0,80));closeSheet();};
+    $("stCancel").onclick=closeSheet;return;
+  }
+  if(a==="nfam"||a==="nchief"){
+    const who=a==="nfam"?(e.ecn||"家屬"):"里長";
+    const body=`【平安鈴】${who}您好：${liName()||"本里"}的${e.n}，今天 ${mdw()} ${reasonText(e)}。`
+      +(cfg.vn?`志工${cfg.vn}已先處理，`:"")+"麻煩協助聯絡確認，謝謝。"
+      +(a==="nfam"&&cfg.vp?`（志工電話 ${cfg.vp}）`:"");
+    return go(smsHref(a==="nfam"?e.ecp:cfg.cp,body));
+  }
+  if(a==="link")return showLink(e);
+  if(a==="preview")return showElder(elderCfgOf(e),true);
+  if(a==="edit")return editElder(e);
+}
+
+/* 長輩手機上的設定：只帶必要資料（稱呼、里名、志工稱呼與電話、截止時間） */
+function elderCfgOf(e){
+  return {app:"peace",v:1,n:e.n,li:liName(),vn:cfg.vn||"志工",to:e.to||cfg.vp,t:e.t,ch:e.ch||"sms"};
+}
+function showLink(e){
+  const c=elderCfgOf(e);
+  if(e.mode!=="self"){
+    openSheet(`<h2>🔗 ${esc(e.n)}</h2><p class="d">這位長輩設定為「志工每天打電話問安」，不需要在長輩手機安裝平安鈴。若要改成長輩自己按，請到「編輯」修改回報方式。</p>
+      <div class="tools"><button class="btn primary" onclick="closeSheet()" type="button">知道了</button></div>`);return;
+  }
+  if(!c.to){openSheet(`<h2>還差一步</h2><p class="d">請先到「⚙️ 志工與里長」填好志工手機，長輩按平安鈴時才知道要傳給誰。</p>
+    <div class="tools"><button class="btn primary" onclick="closeSheet()" type="button">知道了</button></div>`);return;}
+  const url=appUrl()+"#e="+b64enc(JSON.stringify(c));
+  const shareTxt=`這是${e.n}專用的「厝邊平安鈴」。請用長輩的手機點開下面連結，再按瀏覽器的「分享 → 加入主畫面」，以後長輩每天按一下就好：\n${url}`;
+  openSheet(`<h2>🔗 ${esc(e.n)} 的專屬平安鈴</h2>
+    <p class="d">在<b>長輩的手機</b>打開這個連結，然後「加入主畫面」，桌面就會出現一個平安鈴。連結裡只有稱呼、志工電話和回報時間，沒有長輩的電話或地址。</p>
+    <div class="e-note" style="word-break:break-all">${esc(url)}</div>
+    <div class="tools">
+      <button class="btn primary" id="lkCopy" type="button">📋 複製連結</button>
+      <button class="btn" id="lkLine" type="button">💬 用 LINE 傳給家人</button>
+    </div>
+    <p class="d" style="margin-top:12px"><b>加入主畫面：</b>iPhone 用 Safari 開啟 → 下方「分享」→「加入主畫面」。Android 用 Chrome 開啟 → 右上「⋮」→「加到主畫面」。</p>
+    <div class="msg" id="lkMsg"></div>
+    <div class="tools"><button class="btn ghost" onclick="closeSheet()" type="button">關閉</button></div>`);
+  $("lkCopy").onclick=async()=>{await copyText(url);$("lkMsg").textContent="✅ 已複製。";};
+  $("lkLine").onclick=()=>go(lineShare(shareTxt));
+}
+
+/* 新增／編輯長輩 */
+function editElder(e){
+  const isNew=!e;
+  e=e||{id:uid(),n:"",phone:"",mode:"self",t:"10:00",ecn:"",ecp:"",note:"",consent:false,to:""};
+  openSheet(`<h2>${isNew?"＋ 新增長輩":"✏️ 編輯："+esc(e.n)}</h2>
+    <p class="d">只填關懷需要的資料。建議用「稱呼」（例：王阿嬤、3 鄰陳伯），不必寫全名。</p>
+    <label class="f" for="fN">稱呼</label>
+    <input type="text" id="fN" maxlength="16" value="${esc(e.n)}" placeholder="例：王阿嬤">
+    <label class="f">回報方式</label>
+    <div class="radio">
+      <label><input type="radio" name="fM" value="self" ${e.mode==="self"?"checked":""}><span><b>長輩自己按</b><br>長輩手機裝平安鈴，每天按一下</span></label>
+      <label><input type="radio" name="fM" value="call" ${e.mode==="call"?"checked":""}><span><b>志工打電話</b><br>不會用手機的長輩，志工每天問安</span></label>
+    </div>
+    <div class="grid2">
+      <div><label class="f" for="fT">每天幾點前回報</label><input type="time" id="fT" value="${esc(e.t)}"></div>
+      <div><label class="f" for="fP">長輩電話 <small>（可留空）</small></label><input type="tel" id="fP" value="${esc(e.phone)}" placeholder="市話或手機"></div>
+      <div><label class="f" for="fEN">緊急聯絡人 <small>（稱呼）</small></label><input type="text" id="fEN" maxlength="12" value="${esc(e.ecn)}" placeholder="例：兒子阿明"></div>
+      <div><label class="f" for="fEP">緊急聯絡人手機</label><input type="tel" id="fEP" value="${esc(e.ecp)}" placeholder="09xx-xxx-xxx"></div>
+    </div>
+    <label class="f" for="fTo">平安鈴要傳給誰 <small>（志工手機；留空＝用「志工與里長」的預設）</small></label>
+    <input type="tel" id="fTo" value="${esc(e.to)}" placeholder="${esc(cfg.vp||"09xx-xxx-xxx")}">
+    <label class="f" for="fNote">照顧小提醒 <small>（選填，勿寫病歷）</small></label>
+    <input type="text" id="fNote" maxlength="30" value="${esc(e.note)}" placeholder="例：耳朵較重聽，電話要多響幾聲">
+    <label class="consent"><input type="checkbox" id="fC" ${e.consent?"checked":""}>
+      <span>已取得長輩（或家屬）同意，同意書由里辦公處保管。</span></label>
+    <div class="msg" id="fMsg"></div>
+    <div class="tools">
+      <button class="btn primary" id="fSave" type="button">儲存</button>
+      <button class="btn ghost" id="fCancel" type="button">取消</button>
+      ${isNew?"":`<button class="btn danger" id="fDel" type="button">刪除</button>`}
+    </div>`);
+  $("fCancel").onclick=closeSheet;
+  $("fSave").onclick=()=>{
+    const n=$("fN").value.trim();
+    if(!n){$("fMsg").className="msg err";$("fMsg").textContent="請填稱呼。";return;}
+    if(!$("fC").checked){$("fMsg").className="msg err";$("fMsg").textContent="請先取得同意並勾選，才能加入名冊。";return;}
+    Object.assign(e,{n,mode:document.querySelector("input[name=fM]:checked").value,t:$("fT").value||"10:00",
+      phone:$("fP").value.trim(),ecn:$("fEN").value.trim(),ecp:$("fEP").value.trim(),to:$("fTo").value.trim(),
+      note:$("fNote").value.trim(),consent:true});
+    if(isNew)elders.push(e);
+    saveAll();closeSheet();renderBoard();
+    if(isNew&&e.mode==="self")showLink(e);
+  };
+  if(!isNew){let armed=false;$("fDel").onclick=()=>{
+    if(!armed){armed=true;$("fDel").textContent="再按一次確定刪除";return;}
+    elders=elders.filter(x=>x.id!==e.id);
+    Object.values(log).forEach(day=>delete day[e.id]);
+    saveAll();closeSheet();renderBoard();};}
+}
+
+/* 志工與里長設定 */
+$("cfgBtn").onclick=()=>{
+  openSheet(`<h2>⚙️ 志工與里長</h2>
+    <p class="d">長輩按平安鈴時，簡訊會傳到「志工手機」。需要通報時，會用「里長手機」。里名與里長手機會自動沿用厝邊快報的「里的資料」。</p>
+    <label class="f" for="cLi">里名</label><input type="text" id="cLi" value="${esc(cfg.li)}" placeholder="例：幸福里">
+    <div class="grid2">
+      <div><label class="f" for="cVn">志工稱呼</label><input type="text" id="cVn" maxlength="10" value="${esc(cfg.vn)}" placeholder="例：小美"></div>
+      <div><label class="f" for="cVp">志工手機</label><input type="tel" id="cVp" value="${esc(cfg.vp)}" placeholder="09xx-xxx-xxx"></div>
+    </div>
+    <label class="f" for="cCp">里長手機 <small>（通報用）</small></label><input type="tel" id="cCp" value="${esc(cfg.cp)}" placeholder="09xx-xxx-xxx">
+    <div class="tools"><button class="btn primary" id="cSave" type="button">儲存</button>
+    <button class="btn ghost" onclick="closeSheet()" type="button">取消</button></div>`);
+  $("cSave").onclick=()=>{cfg.li=$("cLi").value.trim();cfg.vn=$("cVn").value.trim();cfg.vp=$("cVp").value.trim();cfg.cp=$("cCp").value.trim();
+    saveAll();closeSheet();renderBoard();};
+};
+
+/* 紀錄與備份 */
+$("dataBtn").onclick=()=>{
+  const ym=dkey().slice(0,7);
+  const days=Object.keys(log).filter(k=>k.startsWith(ym));
+  let okDays=0,recDays=0,events=0;
+  days.forEach(k=>Object.values(log[k]).forEach(r=>{recDays++;if(r.st==="ok"||r.st==="call")okDays++;else events++;}));
+  openSheet(`<h2>📊 紀錄與備份</h2>
+    <p class="d">本月（${ym}）：平安紀錄 <b>${okDays}</b> 筆、需要協助或聯絡不上 <b>${events}</b> 筆。可匯出給 USR 成效統計（建議只交出稱呼，不交電話）。</p>
+    <div class="tools">
+      <button class="btn primary" id="dCsv" type="button">⬇️ 匯出本月紀錄（Excel 可開）</button>
+    </div>
+    <p class="d" style="margin-top:14px"><b>換手機或交接給下一位志工：</b>備份檔含長輩電話等個資，只交給接手的志工或里長，不要傳到群組。</p>
+    <div class="tools">
+      <button class="btn" id="dBak" type="button">💾 下載備份檔</button>
+      <button class="btn" id="dRes" type="button">📂 從備份檔還原</button>
+      <input type="file" id="dFile" accept=".json,application/json" class="hide">
+    </div>
+    <div class="tools"><button class="btn danger" id="dClr" type="button">🧹 清除這支手機的平安鈴資料</button></div>
+    <div class="msg" id="dMsg"></div>
+    <div class="tools"><button class="btn ghost" onclick="closeSheet()" type="button">關閉</button></div>`);
+  $("dCsv").onclick=()=>{
+    const rows=[["日期","稱呼","回報方式","狀態","時間","備註"]];
+    days.sort().forEach(k=>elders.forEach(e=>{const r=log[k][e.id];
+      rows.push([k,e.n,e.mode==="self"?"自己按":"電話問安",r?ST[r.st]:"無紀錄",r?r.t:"",r?r.note:""]);}));
+    const csv="\ufeff"+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+    download("平安鈴紀錄_"+(liName()||"本里")+"_"+ym+".csv",csv,"text/csv");
+    $("dMsg").textContent="✅ 已匯出。";
+  };
+  $("dBak").onclick=()=>{download("平安鈴備份_"+(liName()||"本里")+"_"+dkey()+".json",
+    JSON.stringify({app:"peace-board",v:1,elders,log,cfg},null,1),"application/json");$("dMsg").textContent="✅ 備份檔已下載，請妥善保管。";};
+  $("dRes").onclick=()=>$("dFile").click();
+  $("dFile").onchange=ev=>{const f=ev.target.files[0];if(!f)return;const rd=new FileReader();
+    rd.onload=()=>{try{const o=JSON.parse(rd.result);if(o.app!=="peace-board")throw 0;
+      elders=o.elders||[];log=o.log||{};cfg=Object.assign(cfg,o.cfg||{});saveAll();renderBoard();
+      $("dMsg").className="msg";$("dMsg").textContent="✅ 已還原 "+elders.length+" 位長輩的資料。";}
+      catch(e){$("dMsg").className="msg err";$("dMsg").textContent="這個檔案不是平安鈴的備份檔。";}};rd.readAsText(f);ev.target.value="";};
+  let armed=false;$("dClr").onclick=()=>{
+    if(!armed){armed=true;$("dClr").textContent="⚠ 再按一次，確定清除";setTimeout(()=>{armed=false;const b=$("dClr");if(b)b.textContent="🧹 清除這支手機的平安鈴資料";},4000);return;}
+    elders=[];log={};["pb_elders","pb_log","pb_cfg"].forEach(k=>store.del(k));cfg={vn:"",vp:"",cp:store.get("mobile")||"",li:store.get("li")||""};
+    renderBoard();$("dMsg").textContent="✅ 已清除。";};
+};
+
+function openSheet(html){$("sheet").innerHTML=html;$("dlg").classList.add("on");$("sheet").scrollTop=0;}
+function closeSheet(){$("dlg").classList.remove("on");}
+$("dlg").onclick=e=>{if(e.target.id==="dlg")closeSheet();};
+$("addBtn").onclick=()=>editElder(null);
+
+/* ══════════ 長輩畫面 ══════════ */
+let EC=null,PREVIEW=false;
+function greet(){const h=new Date().getHours();return h<11?"早安":h<14?"午安":h<18?"午後好":"晚安";}
+function elderLog(){return store.json("pb_elder_log",{});}
+function streak(){const L=elderLog();let n=0;const d=new Date();
+  if(!L[dkey(d)])d.setDate(d.getDate()-1);
+  while(L[dkey(d)]){n++;d.setDate(d.getDate()-1);}return n;}
+function showElder(c,preview){
+  EC=c;PREVIEW=!!preview;
+  $("boardView").classList.add("hide");$("elderView").classList.remove("hide");closeSheet();
+  $("evPreview").classList.toggle("hide",!PREVIEW);
+  $("evHello").textContent=c.n;
+  $("evDate").textContent=greet()+"！今天 "+mdw();
+  $("volName").textContent=c.vn||"志工";
+  $("callVol").href=telHref(c.to);
+  $("evLi").textContent=(c.li?c.li+"・":"")+"厝邊平安鈴";
+  $("evSettings").textContent=PREVIEW?"← 回點名板":"家人設定";
+  paintElder();
+  makeTouchIcon();
+}
+function paintElder(){
+  const t=PREVIEW?null:elderLog()[dkey()];
+  $("okBtn").classList.toggle("done",!!t);
+  $("okSub").textContent=t?("今天 "+t+" 已經按過了，辛苦了"):("請在 "+(EC.t||"10:00")+" 前按一下");
+  $("evStatus").textContent="";
+  const s=PREVIEW?0:streak();
+  $("evStreak").innerHTML=s>1?`已經連續平安 <b>${s}</b> 天，真好！`:"";
+}
+function elderSend(kind){
+  const body=kind==="ok"
+    ?`【平安鈴】${EC.n}${EC.li?"（"+EC.li+"）":""} ${mdw()} ${hm()} 今天平安 ✅`
+    :`【平安鈴】${EC.n}${EC.li?"（"+EC.li+"）":""} ${mdw()} ${hm()} 需要幫忙，請打電話給我 🙋`;
+  if(PREVIEW){$("evStatus").textContent="（預覽）會傳出：「"+body+"」";return;}
+  if(kind==="ok"){const L=elderLog();L[dkey()]=hm();store.put("pb_elder_log",L);}
+  paintElder();
+  $("evStatus").textContent=kind==="ok"?"已打開簡訊，請按「傳送」 👉":"已打開簡訊，請按「傳送」，志工會打給您";
+  say(kind==="ok"?"好的，已經幫您打開簡訊，請按傳送。祝您今天平安順心。":"好的，請按傳送，志工會打電話給您。");
+  go(EC.ch==="line"?lineShare(body):smsHref(EC.to,body));
+}
+$("okBtn").onclick=()=>elderSend("ok");
+$("helpBtn").onclick=()=>elderSend("help");
+$("evSpeak").onclick=()=>say(`${EC.n}，${greet()}。今天是${mdw().replace("（","星期").replace("）","")}。每天${EC.t||"十點"}以前，按一下綠色的「我今天平安」，再按傳送就好。需要幫忙，按橘色按鈕。緊急狀況，請按紅色按鈕撥一一九。`);
+$("callVol").addEventListener("click",e=>{if(PREVIEW){e.preventDefault();$("evStatus").textContent="（預覽）會撥電話給志工";}});
+$("evSettings").onclick=()=>{
+  if(PREVIEW){$("elderView").classList.add("hide");$("boardView").classList.remove("hide");renderBoard();return;}
+  openSheet(`<h2>家人設定</h2>
+    <p class="d">這支手機的平安鈴會傳給：${esc(EC.vn||"志工")}（${esc(EC.to||"未設定")}），每天 ${esc(EC.t)} 前回報。若志工換人，請向志工索取新的連結重新開啟即可。</p>
+    <div class="tools">
+      <button class="btn danger" id="evReset" type="button">移除這支手機的平安鈴設定</button>
+      <a class="btn ghost" href="?board" style="text-align:center;text-decoration:none">切換到志工點名板</a>
+      <button class="btn ghost" onclick="closeSheet()" type="button">關閉</button>
+    </div>`);
+  $("evReset").onclick=()=>{store.del("pb_elder");store.del("pb_elder_log");location.replace(location.pathname);};
+};
+
+/* 主畫面圖示（iPhone「加入主畫面」使用） */
+function makeTouchIcon(){
+  try{const c=document.createElement("canvas");c.width=c.height=180;const x=c.getContext("2d");
+    x.fillStyle="#2E7D5B";x.fillRect(0,0,180,180);x.fillStyle="#FFFFFF";x.font="900 64px sans-serif";
+    x.textAlign="center";x.textBaseline="middle";x.fillText("平安",90,78);x.font="700 34px sans-serif";x.fillText("✓ 按一下",90,132);
+    $("touchIcon").href=c.toDataURL("image/png");document.title="平安鈴｜"+(EC?EC.n:"");}catch(e){}
+}
+
+/* ══════════ 啟動 ══════════
+   ①網址帶 #e=… → 長輩手機（保留網址，讓「加入主畫面」後的捷徑也帶著設定）
+   ②這支手機存過長輩設定 → 長輩畫面
+   ③其他 → 點名板                                                         */
+(function boot(){
+  const m=(location.hash||"").match(/#e=([A-Za-z0-9_-]+)/);
+  if(m){
+    try{const c=JSON.parse(b64dec(m[1]));if(c.app!=="peace")throw 0;
+      const first=!store.get("pb_elder");
+      store.put("pb_elder",c);showElder(c,false);
+      if(first){$("evSetup").classList.remove("hide");
+        $("evSetup").innerHTML=`👋 設定完成！請把這一頁<b>加入主畫面</b>：<br>iPhone：下方「分享」→「加入主畫面」<br>Android：右上「⋮」→「加到主畫面」`;}
+      return;}catch(e){}
+  }
+  const saved=store.json("pb_elder",null);
+  if(saved&&saved.app==="peace"&&!/board/.test(location.search)){showElder(saved,false);return;}
+  $("boardView").classList.remove("hide");renderBoard();
+  setInterval(()=>{if(!$("boardView").classList.contains("hide")&&!$("dlg").classList.contains("on"))renderBoard();},60000);
+})();
+</script>
+</body>
+</html>

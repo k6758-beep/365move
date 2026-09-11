@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>厝邊快報｜里長專用・一句話生成公告圖文</title>
+<meta name="description" content="里長專用公告產生器：選類別、挑範例、說重點，立即取得公告文字與 LINE 圖卡。正修科技大學招生處敬贈。">
+<style>
+  :root{
+    --paper:#FBF5E9;--vermilion:#B5372A;--vermilion-deep:#8E2A20;
+    --ink:#33302A;--gold:#A8781F;--civic:#1F5F73;
+    --card:#FFFFFF;--line:#E4D9C3;--radius:18px;
+    --shadow:0 4px 16px rgba(51,48,42,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{font-size:17px}
+  body{
+    font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(181,55,42,.05), transparent 30%),
+      radial-gradient(circle at 88% 92%, rgba(168,120,31,.06), transparent 32%),
+      var(--paper);
+    color:var(--ink);line-height:1.65;min-height:100vh;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:20px 16px 130px}
+
+  header.hero{
+    background:linear-gradient(160deg,var(--vermilion) 0%,var(--vermilion-deep) 100%);
+    color:#FDF6E9;border-radius:22px;padding:26px 22px 22px;
+    box-shadow:0 8px 24px rgba(142,42,32,.28);position:relative;overflow:hidden;
+  }
+  header.hero::after{content:"";position:absolute;inset:9px;border:1.5px solid rgba(253,246,233,.35);border-radius:16px;pointer-events:none}
+  .brandline{display:flex;align-items:center;gap:14px}
+  .seal{width:64px;height:64px;flex:0 0 64px;border-radius:50%;border:3px solid #FDF6E9;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Noto Serif TC","PMingLiU",serif;font-weight:900;font-size:1.05rem;
+    line-height:1.15;text-align:center;letter-spacing:2px;background:rgba(253,246,233,.08)}
+  h1{font-family:"Noto Serif TC","PMingLiU",serif;font-size:1.9rem;font-weight:900;letter-spacing:4px}
+  .hero p.sub{font-size:1rem;opacity:.92;margin-top:4px;letter-spacing:1px}
+  .hero .usr{margin-top:12px;font-size:.82rem;opacity:.8;letter-spacing:.5px}
+
+  section.step{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:20px 18px;margin-top:20px}
+  .step-tag{display:inline-flex;align-items:center;gap:8px;margin-bottom:12px}
+  .step-num{width:34px;height:34px;border-radius:50%;background:var(--vermilion);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.05rem;flex:0 0 34px}
+  .step-title{font-size:1.2rem;font-weight:800;letter-spacing:1px}
+  .step-hint{font-size:.88rem;color:#87806F;margin:-8px 0 12px 42px}
+
+  .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:10px}
+  .cat{border:2px solid var(--line);border-radius:14px;background:#FFFDF8;
+    padding:14px 6px 12px;text-align:center;cursor:pointer;
+    transition:transform .12s,border-color .12s,background .12s;font-family:inherit}
+  .cat:active{transform:scale(.96)}
+  .cat .em{font-size:2rem;display:block}
+  .cat .nm{font-size:.95rem;font-weight:700;margin-top:4px;display:block;letter-spacing:.5px}
+  .cat.on{border-color:var(--vermilion);background:#FCEEE6;box-shadow:0 0 0 3px rgba(181,55,42,.12)}
+
+  .ex-box{margin-top:4px}
+  .ex-label{font-size:.92rem;font-weight:800;color:var(--gold);letter-spacing:1px;margin-bottom:8px}
+  #exList{max-height:300px;overflow:auto;padding-right:4px}
+  .ex{display:block;width:100%;text-align:left;border:1.5px dashed var(--gold);background:#FFFBF0;
+    border-radius:12px;padding:10px 14px;font-size:.98rem;color:var(--ink);cursor:pointer;
+    font-family:inherit;margin-bottom:8px;line-height:1.5}
+  .ex:active{background:#FCEEE6}
+  .ex b{color:var(--vermilion);font-size:.85rem;margin-right:6px}
+
+  label.f{display:block;font-weight:700;margin:14px 0 6px;font-size:1rem}
+  label.f small{font-weight:400;color:#87806F}
+  textarea,input[type=text]{width:100%;border:2px solid var(--line);border-radius:12px;background:#FFFDF8;
+    padding:12px 14px;font-size:1.05rem;font-family:inherit;color:var(--ink)}
+  textarea{min-height:110px;resize:vertical}
+  textarea:focus,input:focus{outline:none;border-color:var(--civic);box-shadow:0 0 0 3px rgba(31,95,115,.12)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr 1fr}}
+  .extra{border:1.5px solid var(--line);border-radius:14px;background:#F7FBFC;padding:6px 14px 14px;margin-top:16px}
+  .extra h3{font-size:1rem;color:var(--civic);letter-spacing:1px;margin-top:10px}
+  .extra p{font-size:.85rem;color:#87806F}
+  .hide{display:none!important}
+
+  /* AI 插圖面板（ChatGPT 流程） */
+  #artPanel{background:#FFFBF0;border:1.5px solid var(--gold);border-radius:14px;
+    padding:8px 14px 16px;margin-top:14px;text-align:left}
+  #artPanel h3{font-size:1.02rem;color:var(--gold);letter-spacing:1px;margin-top:10px}
+  #artPanel p{font-size:.85rem;color:#87806F;margin-bottom:10px}
+  .prompt-box{background:#fff;border:1.5px dashed var(--gold);border-radius:12px;
+    padding:12px 14px;font-size:.9rem;line-height:1.6;color:var(--ink);
+    white-space:pre-wrap;word-break:break-all;margin-bottom:10px;max-height:220px;overflow:auto}
+  #copyPromptBtn,#insertGptBtn,#directGenBtn{width:100%;margin-bottom:10px}
+  a.act{display:flex;align-items:center;justify-content:center;text-decoration:none;
+    width:100%;margin-bottom:10px}
+  .art-way{border:1.5px solid var(--line);border-radius:12px;background:#fff;
+    padding:4px 12px 12px;margin-top:12px}
+  .art-way h4{font-size:.98rem;color:var(--civic);letter-spacing:.5px;margin:10px 0 6px}
+  .art-way p.wd{font-size:.83rem;color:#87806F;margin-bottom:10px}
+  #directTopic{font-size:.85rem;color:var(--civic);background:#E7F1F4;border-radius:10px;
+    padding:10px 12px;margin-bottom:10px;line-height:1.6;word-break:break-all}
+  #directTopic.hide{display:none}
+
+  #goBtn{width:100%;margin-top:20px;border:none;border-radius:16px;cursor:pointer;
+    background:linear-gradient(160deg,var(--vermilion),var(--vermilion-deep));
+    color:#FDF6E9;font-size:1.35rem;font-weight:900;letter-spacing:6px;padding:18px;
+    font-family:"Noto Serif TC","PMingLiU",serif;box-shadow:0 6px 18px rgba(142,42,32,.3);transition:transform .12s}
+  #goBtn:active{transform:scale(.985)}
+  #goBtn:disabled{opacity:.55;cursor:wait}
+  #status{margin-top:12px;font-size:.92rem;color:var(--civic);min-height:1.4em;text-align:center}
+  #status.err{color:var(--vermilion)}
+
+  #result{display:none}
+  .tabs{display:flex;gap:8px;margin-bottom:14px}
+  .tab{flex:1;border:2px solid var(--line);background:#FFFDF8;border-radius:12px;
+    padding:10px;font-size:1.05rem;font-weight:800;cursor:pointer;font-family:inherit;color:var(--ink)}
+  .tab.on{border-color:var(--civic);background:#E7F1F4;color:var(--civic)}
+  .pane{display:none}
+  .pane.on{display:block}
+  #posterWrap{text-align:center}
+  #poster{width:100%;max-width:460px;border-radius:14px;border:1px solid var(--line);box-shadow:var(--shadow)}
+  .btnrow{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .act{flex:1;min-width:120px;border:2px solid var(--civic);color:var(--civic);background:#fff;
+    border-radius:12px;padding:12px 8px;font-size:1rem;font-weight:800;cursor:pointer;font-family:inherit}
+  .act.primary{background:var(--civic);color:#fff}
+  .act.art{border-color:var(--gold);color:var(--gold)}
+  .act:disabled{opacity:.55;cursor:wait}
+  .textblock{background:#FFFDF8;border:1.5px dashed var(--gold);border-radius:12px;
+    padding:16px;white-space:pre-wrap;font-size:1.02rem;margin-bottom:8px}
+  .tb-title{font-weight:900;color:var(--gold);letter-spacing:2px;margin:14px 0 8px;font-size:1.05rem}
+
+  #drawer{position:fixed;inset:0;background:rgba(51,48,42,.45);display:none;z-index:40}
+  #drawer.on{display:flex;align-items:flex-end;justify-content:center}
+  .sheet{background:var(--paper);width:100%;max-width:760px;border-radius:22px 22px 0 0;
+    padding:22px 20px 30px;max-height:86vh;overflow:auto}
+  .sheet h2{font-size:1.25rem;letter-spacing:2px;margin-bottom:4px}
+  .sheet p.d{font-size:.88rem;color:#87806F;margin-bottom:10px}
+  .switch-row{display:flex;align-items:center;justify-content:space-between;margin-top:16px;gap:10px}
+  .switch-row b{font-size:1rem}
+  .switch-row small{display:block;color:#87806F;font-weight:400}
+  input[type=checkbox].sw{width:52px;height:30px;appearance:none;background:#D8CFBB;border-radius:30px;
+    position:relative;cursor:pointer;transition:.2s;flex:0 0 52px}
+  input[type=checkbox].sw::after{content:"";position:absolute;width:24px;height:24px;border-radius:50%;
+    background:#fff;top:3px;left:3px;transition:.2s}
+  input[type=checkbox].sw:checked{background:var(--civic)}
+  input[type=checkbox].sw:checked::after{left:25px}
+
+  footer.credit{margin-top:34px;text-align:center;font-size:.84rem;color:#87806F;letter-spacing:1px;line-height:1.9}
+  footer.credit b{color:var(--vermilion)}
+
+  #quickbar{position:fixed;left:0;right:0;bottom:0;z-index:30;
+    display:flex;max-width:760px;margin:0 auto;gap:6px;
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+    background:rgba(251,245,233,.97);border-top:2px solid var(--line);
+    box-shadow:0 -4px 14px rgba(51,48,42,.1)}
+  .qbtn{flex:1;border:none;border-radius:12px;padding:11px 4px;font-size:.98rem;font-weight:900;
+    cursor:pointer;font-family:inherit;text-align:center;text-decoration:none;letter-spacing:1px;
+    display:flex;align-items:center;justify-content:center;gap:4px;color:#fff}
+  .qbtn.dream{background:linear-gradient(160deg,var(--vermilion),var(--vermilion-deep))}
+  .qbtn.lineq{background:#06C755}
+  .qbtn.call{background:var(--civic)}
+  .qbtn.gear{background:#fff;color:var(--ink);border:2px solid var(--line)}
+  /* v7.1：交接／匯出、個資提示 */
+  .transfer{border:1.5px solid var(--line);border-radius:14px;background:#F7FBFC;padding:6px 14px 14px;margin-top:20px}
+  .transfer h3{font-size:1rem;color:var(--civic);letter-spacing:1px;margin-top:10px}
+  .transfer p{font-size:.85rem;color:#87806F;margin:4px 0 6px;line-height:1.6}
+  .transfer p.warn{color:var(--vermilion)}
+  .transfer textarea{min-height:64px;font-size:.85rem}
+  #cfgMsg{font-size:.9rem;margin-top:10px;color:var(--civic);min-height:1.2em;line-height:1.6}
+  #cfgMsg.err{color:var(--vermilion)}
+  .act.danger{border-color:var(--vermilion);color:var(--vermilion)}
+  .pii-note{font-size:.82rem;color:#6B6455;background:#F4EFE4;border-radius:8px;padding:7px 10px;margin:0 0 10px;line-height:1.5}
+  /* v7.2：厝邊工具箱 */
+  .toolbox{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .toolbox a{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:12px 12px;text-decoration:none;color:var(--ink);box-shadow:var(--shadow)}
+  .toolbox a:active{transform:scale(.98)}
+  .toolbox .tb-em{font-size:1.8rem;flex:0 0 auto}
+  .toolbox b{display:block;font-size:1.05rem;letter-spacing:1px;color:var(--civic)}
+  .toolbox small{display:block;font-size:.8rem;color:#87806F;line-height:1.4}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="brandline">
+      <div class="seal">里辦<br>公處</div>
+      <div>
+        <h1>厝邊快報</h1>
+        <p class="sub">里長專用・一句話生成公告圖文</p>
+      </div>
+    </div>
+    <p class="usr">正修科技大學招生處 × 大學社會責任（USR）敬贈里辦公處使用</p>
+  </header>
+
+  <nav class="toolbox" aria-label="更多厝邊工具">
+    <a href="peace.html"><span class="tb-em">🔔</span><span><b>平安鈴</b><small>獨居長輩每日一鍵問安</small></span></a>
+    <a href="movejoy.html"><span class="tb-em">🪑</span><span><b>樂動 365</b><small>據點帶操・坐站季測</small></span></a>
+  </nav>
+
+  <!-- 步驟一 -->
+  <section class="step">
+    <div class="step-tag"><span class="step-num">1</span><span class="step-title">選公告類別</span></div>
+    <p class="step-hint">換類別時，下面會自動換成新的範例。</p>
+    <div class="cats" id="cats"></div>
+  </section>
+
+  <!-- 步驟二 -->
+  <section class="step">
+    <div class="step-tag"><span class="step-num">2</span><span class="step-title">說重點</span></div>
+    <p class="step-hint">點下面的範例直接帶入修改，或自行打字輸入。</p>
+
+    <div class="ex-box">
+      <div class="ex-label">📋 常用範例（點一下帶入，改幾個字就能用）</div>
+      <div id="exList"></div>
+    </div>
+
+    <label class="f" for="brief">公告內容</label>
+    <textarea id="brief" placeholder=""></textarea>
+
+    <div class="grid2">
+      <div>
+        <label class="f" for="dStart">開始日期 <small>（可留空）</small></label>
+        <input type="text" id="dStart" placeholder="例：7/25（六）">
+      </div>
+      <div>
+        <label class="f" for="dEnd">結束日期 <small>（可留空）</small></label>
+        <input type="text" id="dEnd" placeholder="例：7/31（五）">
+      </div>
+      <div>
+        <label class="f" for="tStart">開始時間 <small>（可留空）</small></label>
+        <input type="text" id="tStart" placeholder="例：上午 8:00">
+      </div>
+      <div>
+        <label class="f" for="tEnd">結束時間 <small>（可留空）</small></label>
+        <input type="text" id="tEnd" placeholder="例：上午 10:00">
+      </div>
+    </div>
+    <label class="f" for="dPlace">地點 <small>（可留空）</small></label>
+    <input type="text" id="dPlace" placeholder="例：里民公園、里活動中心">
+    <label class="f" for="customNote">里長想補充的話 <small>（可留空；會接在公告內容後面一併呈現）</small></label>
+    <input type="text" id="customNote" placeholder="例：感謝里內志工協助，歡迎大家告訴大家">
+    <label class="f" for="psNote">附註（PS）<small>（可留空；例：雨天順延、行動不便可電洽里長）</small></label>
+    <input type="text" id="psNote" placeholder="例：雨天順延，時間另行公告">
+
+    <!-- 社區旅遊專用欄位 -->
+    <div class="extra hide" id="travelExtra">
+      <h3>🚌 旅遊公告小幫手</h3>
+      <p>填得越齊，里民問得越少。都可以留空。</p>
+      <div class="grid2">
+        <div>
+          <label class="f" for="tDest">目的地／行程</label>
+          <input type="text" id="tDest" placeholder="例：台南安平、奇美博物館">
+        </div>
+        <div>
+          <label class="f" for="tFee">費用</label>
+          <input type="text" id="tFee" placeholder="例：每人 500 元（含車資、午餐）">
+        </div>
+        <div>
+          <label class="f" for="tSign">報名方式／地點</label>
+          <input type="text" id="tSign" placeholder="例：至里辦公處向幹事報名">
+        </div>
+        <div>
+          <label class="f" for="tDue">報名截止</label>
+          <input type="text" id="tDue" placeholder="例：8/5（三）或額滿為止">
+        </div>
+        <div>
+          <label class="f" for="tQuota">名額</label>
+          <input type="text" id="tQuota" placeholder="例：120 名（兩台遊覽車）">
+        </div>
+        <div>
+          <label class="f" for="tMeet">集合時間地點</label>
+          <input type="text" id="tMeet" placeholder="例：當天 6:50 里活動中心前">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 步驟三 -->
+  <section class="step">
+    <div class="step-tag"><span class="step-num">3</span><span class="step-title">按下去，公告就好了</span></div>
+    <button id="goBtn" type="button">產 生 公 告</button>
+    <div id="status"></div>
+  </section>
+
+  <!-- 成果 -->
+  <section class="step" id="result">
+    <div class="step-tag"><span class="step-num">✓</span><span class="step-title">公告完成！</span></div>
+    <div class="tabs">
+      <button class="tab on" data-pane="paneImg" type="button">🖼️ 公告圖卡</button>
+      <button class="tab" data-pane="paneTxt" type="button">📝 公告文字</button>
+    </div>
+
+    <div class="pane on" id="paneImg">
+      <div id="posterWrap"><canvas id="poster" width="1080" height="1350"></canvas></div>
+      <div class="btnrow">
+        <button class="act art" id="photoBtn" type="button">📷 放照片</button>
+        <input type="file" id="photoFile" accept="image/*" style="display:none">
+        <button class="act art" id="artBtn" type="button">🎨 AI 插圖</button>
+        <button class="act" id="layoutBtn" type="button">🔀 換個版面</button>
+        <button class="act primary" id="dlBtn" type="button">⬇️ 下載圖卡</button>
+      </div>
+
+      <!-- AI 插圖：兩種方式（皆以「公告內容」文字為 Prompt 主體） -->
+      <div class="hide" id="artPanel">
+        <h3>🎨 AI 插圖・兩種方式任選</h3>
+        <p>兩種方式的插圖主題都直接取自「公告內容＋里長想補充的話」，確保圖與公告相關。</p>
+
+        <!-- 方式一：直接生成（免帳號、免金鑰的免費引擎） -->
+        <div class="art-way">
+          <h4>方式一・✨ 直接生成（免帳號・免金鑰）</h4>
+          <p class="wd">使用免費 AI 引擎（Pollinations／Flux），以公告內容為畫面主題直接生成現代風格插圖，約需 10～30 秒。</p>
+          <button class="act primary" id="directGenBtn" type="button">✨ 直接生成插圖（以公告內容為主題）</button>
+          <div id="directTopic" class="hide"></div>
+        </div>
+
+        <!-- 方式二：利用 ChatGPT 產出 -->
+        <div class="art-way">
+          <h4>方式二・💬 利用 ChatGPT 產出</h4>
+          <p class="wd">① 複製下方 Prompt（已依「公告內容」寫好）　② 開啟 ChatGPT 貼上生成、下載圖片　③ 回來按「放入圖片」插入公告圖卡</p>
+          <div class="prompt-box" id="gptPrompt"></div>
+          <div class="pii-note hide" id="gptPII"></div>
+          <button class="act primary" id="copyPromptBtn" type="button">📋 複製 Prompt（貼到 ChatGPT）</button>
+          <a class="act art" id="openGptLink" href="https://chatgpt.com/" target="_blank" rel="noopener">🔗 開啟 ChatGPT（另開視窗）</a>
+          <button class="act art" id="insertGptBtn" type="button">📥 放入 ChatGPT 生成的圖片</button>
+          <div class="switch-row">
+            <b>圖卡以小字標明「插圖由 ChatGPT 生成」</b>
+            <input type="checkbox" class="sw" id="gptCredit" checked>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pane" id="paneTxt">
+      <div class="tb-title">正式公告（貼公佈欄、發公文）</div>
+      <div class="textblock" id="formalTxt"></div>
+      <button class="act" data-copy="formalTxt" type="button">📋 複製正式公告</button>
+      <div class="tb-title">LINE 親切版（貼里民群組）</div>
+      <div class="textblock" id="lineTxt"></div>
+      <button class="act" data-copy="lineTxt" type="button">📋 複製 LINE 版</button>
+    </div>
+  </section>
+
+  <footer class="credit">
+    <b>厝邊快報</b>｜里長的數位好幫手<br>
+    正修科技大學 招生處 敬贈｜大學社會責任實踐｜洽詢 07-7310203<br>
+    <small>版本 7.2（2026/9）｜新增：平安鈴、樂動 365 據點版、換手機匯出、AI 插圖個資保護</small>
+  </footer>
+</div>
+
+<nav id="quickbar">
+  <a class="qbtn dream" id="dreamLink" href="https://k6758-beep.github.io/Cont-Ed-7/?utm_source=village7&amp;utm_medium=quickbar" target="_blank" rel="noopener">🎯 正修 圓夢</a>
+  <a class="qbtn lineq" href="https://line.me/R/ti/p/@csu1111" target="_blank" rel="noopener">💬 LINE</a>
+  <a class="qbtn call" href="tel:077310203">📞 來電</a>
+  <button class="qbtn gear" id="setBtn" type="button">⚙️ 里的資料</button>
+</nav>
+
+<div id="drawer">
+  <div class="sheet">
+    <h2>⚙️ 里的資料（填一次就好）</h2>
+    <p class="d">這些資料會自動放進每一張公告的落款與聯絡方式。里名寫「幸福」或「幸福里」都可以。</p>
+    <div class="pii-note hide" id="cfgBanner"></div>
+    <label class="f" for="sLi">里名</label>
+    <input type="text" id="sLi" placeholder="例：幸福里">
+    <label class="f" for="sChief">里長姓名</label>
+    <input type="text" id="sChief" placeholder="例：王大明">
+    <label class="f" for="sOffice">里民辦公室電話 <small>（可留空）</small></label>
+    <input type="text" id="sOffice" placeholder="例：07-1234-5678">
+    <label class="f" for="sMobile">里長手機 <small>（可留空）</small></label>
+    <input type="text" id="sMobile" placeholder="例：0912-345-678">
+    <label class="f" for="sLineId">里長 LINE ID <small>（可留空）</small></label>
+    <input type="text" id="sLineId" placeholder="例：chief-wang">
+    <label class="f" for="sGroup">里民 LINE 群組 <small>（名稱或加入連結，可留空）</small></label>
+    <input type="text" id="sGroup" placeholder="例：幸福里大家庭">
+    <div class="switch-row">
+      <b>圖卡底部顯示「正修招生處提供」<small>大學與里互惠合作的署名</small></b>
+      <input type="checkbox" class="sw" id="sCSU" checked>
+    </div>
+    <div class="btnrow">
+      <button class="act primary" id="saveSet" type="button">儲存</button>
+    </div>
+
+    <div class="transfer">
+      <h3>📦 換手機・交接給新任里長</h3>
+      <p>里的資料只存在這支手機的瀏覽器裡。換手機、換瀏覽器或交接時，用下面的方式帶過去，不用重打。</p>
+      <div class="btnrow">
+        <button class="act" id="cfgLinkBtn" type="button">🔗 複製設定連結</button>
+        <button class="act" id="cfgFileBtn" type="button">💾 下載設定檔</button>
+      </div>
+      <p class="warn">⚠ 連結與設定檔含電話等資料，只傳給自己或接任的里長，請勿貼到里民群組。</p>
+      <label class="f" for="cfgIn">在新手機匯入 <small>（貼上設定連結或設定碼）</small></label>
+      <textarea id="cfgIn" placeholder="把收到的設定連結貼在這裡"></textarea>
+      <div class="btnrow">
+        <button class="act primary" id="cfgImportBtn" type="button">📥 匯入</button>
+        <button class="act" id="cfgPickBtn" type="button">📂 選擇設定檔</button>
+        <input type="file" id="cfgFile" accept=".json,application/json" style="display:none">
+      </div>
+      <p>交接給新任里長時：匯入後把「里長姓名、手機、LINE」改成新任里長的資料，再按「儲存」。</p>
+      <div class="btnrow">
+        <button class="act danger" id="cfgClearBtn" type="button">🧹 清除這支手機的里資料</button>
+      </div>
+      <div id="cfgMsg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════ 儲存層 ══════════════ */
+const mem={};
+const store={
+  get(k){try{return window.localStorage.getItem(k)??mem[k]??null;}catch(e){return mem[k]??null;}},
+  set(k,v){mem[k]=v;try{window.localStorage.setItem(k,v);}catch(e){}},
+  del(k){delete mem[k];try{window.localStorage.removeItem(k);}catch(e){}}
+};
+function $(id){return document.getElementById(id);}
+
+/* ══════════════ 類別資料（art 場景一律為現代都會高雄，不出現舊時代鄉村背景） ══════════════ */
+const CATS=[
+  { id:"dengue", nm:"登革熱防治", em:"🦟", side:["💧","🪣"],
+    theme:{bg:"#EAF4F1",deep:"#1E6B5C",light:"#CDE7DF"}, tip:"巡・倒・清・刷",
+    art:"residents of a modern apartment community checking and cleaning water containers on balconies, tidy contemporary urban courtyard",
+    photo:"cleaning",
+    ex:[
+      "最近登革熱病例增加，請大家每週檢查家戶內外的積水容器，倒掉積水、刷洗乾淨。",
+      "環保局近日將到里內稽查孳生源，請里民先自行清理花盆、水桶、廢輪胎的積水。",
+      "連日下雨過後，請大家立刻檢查陽台、頂樓與屋簷排水槽，清除積水避免病媒蚊孳生。",
+      "里內將於本週末舉辦社區環境大掃除，邀請里民一起清理巷弄死角，杜絕孳生源。",
+      "提醒大家：家中花瓶、水盤每週換水刷洗，儲水容器記得加蓋，一起防範登革熱。"
+    ]},
+  { id:"spray", nm:"噴藥通知", em:"🚿", side:["🏠","🐕"],
+    theme:{bg:"#FFF6E3",deep:"#B3641A",light:"#F8E3BC"}, tip:"環境消毒",
+    art:"professional pest control team in clean uniforms spraying disinfectant in a modern city park, contemporary apartment buildings",
+    photo:"garden",
+    ex:[
+      "里公園及周邊水溝將全面噴藥消毒，請大家關好門窗、收起衣物，寵物暫時帶離。",
+      "配合衛生局防疫作業，本里巷道進行噴藥消毒，噴藥後兩小時內請勿靠近。",
+      "里內公園樹木將進行病蟲害噴藥，作業期間請勿進入公園，兒童與寵物請遠離。",
+      "本週將進行水溝消毒作業，車輛請勿停放於巷道兩側，以利作業車輛通行。"
+    ]},
+  { id:"elder-money", nm:"重陽敬老金", em:"🧧", side:["🌼","👴"],
+    theme:{bg:"#FBEDE6",deep:"#B5372A",light:"#F5D5C8"}, tip:"敬老尊賢",
+    art:"cheerful taiwanese seniors receiving red envelope gifts at a bright modern community activity center, warm celebration",
+    photo:"elderly",
+    ex:[
+      "重陽節敬老金開始發放，請符合資格的長輩攜帶證件到里辦公處領取。",
+      "敬老金發放期限將截止，尚未領取的長輩請把握時間，也可請家屬協助代領。",
+      "重陽敬老金即日起發放，行動不便的長輩可由家屬攜帶雙方證件代領。",
+      "符合設籍規定的長輩皆可領取重陽敬老金，資格細節請電洽里辦公處確認。"
+    ]},
+  { id:"travel", nm:"社區旅遊", em:"🚌", side:["🏞️","📸"],
+    theme:{bg:"#E9F2F7",deep:"#1F5F73",light:"#CFE3ED"}, tip:"歡喜逗陣行",
+    art:"happy multi-generation community group boarding a modern tour coach in front of a contemporary activity center, city skyline",
+    photo:"bus",
+    ex:[
+      "里民一日遊開放報名，名額有限、額滿為止，歡迎大家逗陣出去玩。",
+      "秋季里民旅遊開始報名囉，詳細行程與費用請看下方說明。",
+      "里民二日遊開始報名，行程精彩、名額有限，歡迎攜家帶眷一起參加。",
+      "本次旅遊報名踴躍，尚有少量名額，想參加的里民請儘速到里辦公處報名。",
+      "旅遊出發前提醒：請記得攜帶健保卡、個人藥品，並準時到集合地點上車。"
+    ]},
+  { id:"festival", nm:"節慶祝賀", em:"🎉", side:["🏮","🎊"],
+    theme:{bg:"#FBEDE6",deep:"#B5372A",light:"#F6D9C4"}, tip:"佳節愉快",
+    art:"festival celebration in a modern city plaza with stylish lantern decorations, young families and seniors together, urban skyline",
+    photo:"lantern",
+    ex:[
+      "【春節】新春愉快！恭喜發財，祝全體里民闔家平安、萬事如意、財源廣進。",
+      "【元宵】元宵節快樂！吃湯圓、賞花燈，祝大家平安團圓、日子甜甜。",
+      "【母親節】祝天下媽媽母親節快樂！感謝媽媽的辛勞，記得回家抱抱媽媽。",
+      "【端午】端午佳節，粽香傳情！祝大家平安健康，天氣轉熱記得防暑。",
+      "【七夕】七夕情人節快樂！祝有情人終成眷屬，闔家幸福美滿。",
+      "【父親節】八八節快樂！感謝爸爸的辛勞與付出，祝全里爸爸身體健康。",
+      "【中秋】中秋節快樂！月圓人團圓，烤肉請注意用火安全、垃圾帶走。",
+      "【重陽】重陽敬老！祝里內長輩福壽安康、呷百二。",
+      "【冬至】冬至到，吃湯圓，全家團圓。天冷記得添衣保暖。",
+      "【聖誕】聖誕快樂！祝大家平安夜平安、聖誕節溫馨愉快。",
+      "【跨年】祝全體里民新年快樂！跨年活動注意保暖與交通安全。"
+    ]},
+  { id:"care", nm:"關懷長輩", em:"🍵", side:["🧣","☀️"],
+    theme:{bg:"#F4EFE4",deep:"#7A5C1E",light:"#E8DCBB"}, tip:"厝邊相照顧",
+    art:"young volunteers caring for seniors in a bright modern community center with large windows, warm tea, green plants",
+    photo:"tea",
+    ex:[
+      "【每日早安】早安！新的一天，祝福大家笑口常開、平安健康、事事順心。",
+      "【天冷】天氣轉冷，提醒長輩注意保暖、多喝溫開水，早晚外出多加一件外套。",
+      "【天熱】天氣炎熱，請長輩避免中午時段外出，多喝水、預防中暑。",
+      "【雨天】下雨天路滑，長輩外出請放慢腳步、小心慢行，記得帶傘。",
+      "【健康提醒】提醒長輩按時吃藥、定期回診，身體有不舒服要早點就醫。",
+      "【換季提醒】季節交替早晚溫差大，提醒長輩適時增減衣物，預防感冒。",
+      "【用藥安全】提醒長輩藥品放在陰涼處、看清楚標示，不吃來路不明的藥品。",
+      "【運動提醒】傍晚天氣涼爽，歡迎長輩到公園走走、活動筋骨，運動量力而為。",
+      "【週末陪伴】週末到了，提醒為人子女多陪伴家中長輩，吃頓飯、聊聊天。",
+      "【晚安祝福】忙碌一天辛苦了，祝大家晚安好眠，明天又是美好的一天。"
+    ]},
+  { id:"safety", nm:"防詐/治安", em:"🛡️", side:["📵","🚔"],
+    theme:{bg:"#EDEFF5",deep:"#3B4A78",light:"#D6DBEA"}, tip:"守望相助",
+    art:"anti-fraud awareness campaign on a modern city street, police officers talking with citizens, digital signage",
+    photo:"police",
+    ex:[
+      "最近有詐騙電話假冒公所人員，請里民不要提供帳戶資料，有疑問先撥165或問里長。",
+      "提醒里民出門鎖好門窗，發現可疑人士請通報派出所，大家互相照應。",
+      "近日流行假冒銀行簡訊的釣魚連結，收到不明簡訊請勿點選，也不要輸入個人資料。",
+      "詐騙集團常以「猜猜我是誰」電話詐騙長輩，接到可疑電話請先向家人或里長求證。",
+      "提醒里民：警察與檢察官不會用電話要求匯款或監管帳戶，遇到請直接掛斷並撥165。",
+      "夜間出入請注意住家周邊照明，發現路燈故障可通報里辦公處協助報修。"
+    ]},
+  { id:"custom", nm:"其他公告", em:"📢", side:["📌","🏘️"],
+    theme:{bg:"#F2F0EA",deep:"#545046",light:"#E0DCD0"}, tip:"里民須知",
+    art:"community announcement with megaphone icon in a contemporary taiwanese urban neighborhood, modern bulletin board, clean streets",
+    photo:"neighborhood",
+    ex:[
+      "里活動中心本週六暫停開放，造成不便敬請見諒。",
+      "本里巷道將進行施工，請用路人放慢速度、小心通行。",
+      "本週三上午里內部分區域停水，請里民提前儲水備用。",
+      "垃圾車路線與時間近期調整，詳細站點時間請洽里辦公處或里民群組。",
+      "里民大會即將召開，歡迎里民踴躍出席，共同關心社區事務。",
+      "里辦公處備有物資將發放給需要的家庭，詳情請洽里長或里幹事。",
+      "流浪犬貓絕育及狂犬病疫苗巡迴注射活動將到本里，歡迎飼主帶寵物參加。"
+    ]}
+];
+
+/* 節慶關鍵字 → 圖示（讓節慶圖卡各有味道） */
+const FEST=[
+  ["春節|新春|過年|恭喜發財","🧨",["🧧","🐲"]],
+  ["元宵","🏮",["🎐","🍡"]],
+  ["清明","🌱",["🕊️","🌦️"]],
+  ["母親節","💐",["❤️","🌷"]],
+  ["端午","🛶",["🌿","🍙"]],
+  ["七夕","💞",["🌹","🌌"]],
+  ["父親節|八八節","👔",["❤️","🎁"]],
+  ["中秋","🌕",["🥮","🐇"]],
+  ["重陽","🌼",["🍵","🦢"]],
+  ["冬至","🥣",["🍡","❄️"]],
+  ["聖誕|耶誕","🎄",["🎁","⛄"]],
+  ["跨年|元旦|新年","🎆",["🎉","🥳"]]
+];
+
+/* 各類別文字版結語（僅用於「公告文字」，圖卡不顯示任何非里長輸入的句子） */
+const CLOSE_BY_CAT={
+  dengue:"多一分巡查，少一分風險",
+  spray:"造成不便，敬請見諒",
+  "elder-money":"敬祝長輩 福壽安康",
+  travel:"名額有限，歡迎踴躍報名",
+  festival:"祝闔家平安、佳節愉快",
+  care:"你的平安，是里長的心願",
+  safety:"多一分警覺，多一分平安",
+  custom:"感謝大家的配合"
+};
+
+const state={
+  cat:CATS[0], data:null, illust:null, illustIsPhoto:false, illustFromGpt:false, variant:0,
+  gptCredit:true,
+  settings:{
+    li:store.get("li")||"", chief:store.get("chief")||"",
+    office:store.get("office")||"", mobile:store.get("mobile")||"",
+    lineId:store.get("lineId")||"", group:store.get("group")||"",
+    csu:store.get("csu")===null?true:store.get("csu")==="1"
+  }
+};
+
+/* 里名正規化：輸入「幸福」或「幸福里」都顯示「幸福里」 */
+function liName(){
+  const v=(state.settings.li||"").trim();
+  if(!v)return"";
+  return v.endsWith("里")?v:v+"里";
+}
+function signName(){
+  const li=liName()||"本里";
+  return state.settings.chief?(li+"里長 "+state.settings.chief+" 敬啟"):(li+"辦公處 敬啟");
+}
+function dateTimeStr(){
+  const d1=$("dStart").value.trim(),d2=$("dEnd").value.trim();
+  const t1=$("tStart").value.trim(),t2=$("tEnd").value.trim();
+  const d=[d1,d2].filter(Boolean).join(" ～ ");
+  const t=[t1,t2].filter(Boolean).join(" ～ ");
+  return [d,t].filter(Boolean).join("　");
+}
+function contactLines(){
+  const s=state.settings,out=[];
+  if(s.office)out.push("里辦公室："+s.office);
+  if(s.mobile)out.push("里長手機："+s.mobile);
+  if(s.lineId)out.push("里長LINE："+s.lineId);
+  if(s.group)out.push("里民群組："+s.group);
+  return out;
+}
+/* ══════════════ v7.1-① 招生來源追蹤 ══════════════
+   「正修 圓夢」連結自動帶上來源參數，招生頁（GA4 或自訂計數）即可分辨是哪一個里帶來的流量。
+   只帶里名，不帶里長姓名或電話。 */
+const CSU_PAGE="https://k6758-beep.github.io/Cont-Ed-7/";
+function csuLink(medium){
+  const p=new URLSearchParams({utm_source:"village7",utm_medium:medium||"quickbar",utm_campaign:liName()||"unset"});
+  return CSU_PAGE+"?"+p.toString();
+}
+function refreshDreamLink(){const a=$("dreamLink");if(a)a.href=csuLink("quickbar");}
+
+/* ══════════════ v7.1-② 個資過濾（送往外部 AI 之前） ══════════════
+   直接生成插圖（Pollinations）與貼到 ChatGPT 的 Prompt，只需要「畫面主題」，
+   不需要電話、門牌、姓名。送出前一律先過濾；公告文字與圖卡本身不受影響。 */
+const SURNAMES="陳林黃張李王吳劉蔡楊許鄭謝洪郭邱曾廖賴徐周葉蘇莊呂江何蕭羅高潘簡朱鍾游彭詹胡施沈余盧梁趙顏柯翁魏孫戴范方宋鄧杜傅侯曹薛丁卓阮馬董温溫唐藍石蔣古紀姚連馮歐程湯田康姜白汪鄒尤巫鐘黎涂凃龔嚴韓袁金童陸夏柳邵錢伍倪于譚駱熊任甘秦顧毛章史官萬俞雷粘饒";
+const NAME_RE=new RegExp("["+SURNAMES+"][\\u4e00-\\u9fff]{0,2}(先生|小姐|女士|太太|老師|醫師|阿伯|阿姨|阿嬤|阿公|伯伯|奶奶|爺爺)","g");
+function scrubPII(text){
+  let t=(text||"")+"";const hits=new Set();
+  const rep=(re,label,to)=>{t=t.replace(re,()=>{hits.add(label);return to;});};
+  const s=state.settings;
+  [s.chief,s.office,s.mobile,s.lineId].filter(v=>v&&v.trim().length>=2).forEach(v=>{
+    rep(new RegExp(v.trim().replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"g"),"里長個人資料","");
+  });
+  rep(/https?:\/\/\S+|line\.me\/\S+/gi,"網址","");
+  rep(/[\w.+-]+@[\w-]+\.[\w.]+/g,"電子郵件","");
+  rep(/LINE\s*(ID)?\s*[:：]?\s*@?[A-Za-z0-9._-]{3,}/gi,"LINE ID","");
+  rep(/[A-Za-z][12]\d{8}/g,"身分證字號","");
+  rep(/\+?886[\s-]?\d[\d\s-]{7,}/g,"電話","");
+  rep(/\(?0\d{1,2}\)?[\s-]?\d{3,4}[\s-]?\d{3,4}/g,"電話","");
+  rep(/\d+\s*(之\s*\d+)?\s*(號|巷|弄|樓|室)/g,"門牌","");
+  rep(NAME_RE,"姓名","一位居民");
+  rep(/\d{6,}/g,"長串數字","");
+  t=t.replace(/([，、；：:])\s*[，、；：:]+/g,"$1").replace(/\s{2,}/g," ").replace(/^[，、；：:\s]+|[，、；：:\s]+$/g,"").trim();
+  return {text:t,hits:[...hits]};
+}
+let lastPII=[];
+function piiNoteText(){
+  return lastPII.length?("🔒 已自動隱藏「"+lastPII.join("、")+"」，這些資料不會送到外部 AI；公告文字與圖卡不受影響。"):"";
+}
+
+/* ══════════════ v7.1-③ 里的資料：匯出／匯入／清除 ══════════════ */
+const CFG_FIELDS=[["li","sLi"],["chief","sChief"],["office","sOffice"],["mobile","sMobile"],["lineId","sLineId"],["group","sGroup"]];
+function b64enc(str){const by=new TextEncoder().encode(str);let bin="";by.forEach(b=>bin+=String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");}
+function b64dec(s){s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";
+  return new TextDecoder().decode(Uint8Array.from(atob(s),c=>c.charCodeAt(0)));}
+function cfgFromFields(){
+  const o={app:"village7",v:1};
+  CFG_FIELDS.forEach(([k,id])=>{o[k]=$(id).value.trim();});
+  o.csu=$("sCSU").checked;return o;
+}
+function cfgValidate(o){
+  if(!o||o.app!=="village7")throw new Error("這不是厝邊快報的設定資料");
+  const clean={};CFG_FIELDS.forEach(([k])=>{clean[k]=String(o[k]||"").trim().slice(0,80);});
+  clean.csu=o.csu!==false;return clean;
+}
+function cfgParseText(input){
+  let code=(input||"").trim();
+  if(!code)throw new Error("請先貼上設定連結或設定碼");
+  if(code.startsWith("{"))return cfgValidate(JSON.parse(code));
+  const m=code.match(/#cfg=([A-Za-z0-9_-]+)/);if(m)code=m[1];
+  return cfgValidate(JSON.parse(b64dec(code)));
+}
+function cfgFillFields(o){CFG_FIELDS.forEach(([k,id])=>{$(id).value=o[k]||"";});$("sCSU").checked=o.csu;}
+function cfgMsg(t,err){const m=$("cfgMsg");m.className=err?"err":"";m.textContent=t;}
+function cfgBanner(t){const b=$("cfgBanner");b.textContent=t||"";b.classList.toggle("hide",!t);}
+function appBaseUrl(){
+  return /github\.io$/.test(location.hostname)?(location.origin+location.pathname):"https://k6758-beep.github.io/Village7/";
+}
+async function copyText(txt){
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);
+    ta.select();document.execCommand("copy");ta.remove();}
+}
+function saveSettings(){
+  const s=state.settings;
+  CFG_FIELDS.forEach(([k,id])=>{s[k]=$(id).value.trim();store.set(k,s[k]);});
+  s.csu=$("sCSU").checked;store.set("csu",s.csu?"1":"0");
+  refreshDreamLink();
+}
+
+function travelInfo(){
+  if(state.cat.id!=="travel")return[];
+  return [
+    ["目的地／行程",$("tDest").value],["費用",$("tFee").value],
+    ["報名方式",$("tSign").value],["報名截止",$("tDue").value],
+    ["名額",$("tQuota").value],["集合",$("tMeet").value]
+  ].map(([k,v])=>[k,v.trim()]).filter(([,v])=>v);
+}
+
+/* ══════════════ 內建範本（離線保底）══════════════
+   圖卡與條列文字「只」取自：公告內容 → 里長想補充的話 → 旅遊欄位。
+   絕不自行加入任何里長沒說過的祝福語、口號或提醒。 */
+function fallbackBuild(cat,brief){
+  const B=brief.trim(),dt=dateTimeStr(),P=$("dPlace").value.trim();
+  const extra=$("customNote").value.trim();
+  const splitPts=t=>t.replace(/【[^】]*】/g,"").split(/[，。；、,;！!？?]/).map(s=>s.trim()).filter(s=>s.length>=4);
+  const briefPts=B?splitPts(B).slice(0,4):[];
+  const extraPts=extra?splitPts(extra).slice(0,2):[];
+  const tPts=travelInfo().map(([k,v])=>k+"："+v);
+  const pts=[...briefPts,...extraPts,...tPts].slice(0,5);   /* 只用里長輸入的內容 */
+
+  const titleMap={dengue:"登革熱防治",spray:"環境噴藥消毒","elder-money":"重陽敬老金",
+    travel:"里民旅遊",festival:"佳節祝賀",care:"關懷厝邊",safety:"防詐騙提醒",custom:"里民公告"};
+  // 節慶：從範例的【】抓標題
+  let title=titleMap[cat.id];
+  const fm=B.match(/【([^】]{2,6})】/);
+  if(cat.id==="festival"&&fm)title=fm[1]+"快樂";
+  if(cat.id==="care"&&fm&&fm[1].includes("早安"))title="早安祝福";
+
+  const closing=CLOSE_BY_CAT[cat.id];       /* 只用於文字版結尾 */
+  const greet="親愛的里民朋友，您好：";
+
+  const cleanB=B.replace(/【[^】]*】/g,"").trim();
+  const ps=$("psNote").value.trim();
+  const infoLines=[dt?("時間："+dt):"",P?("地點："+P):""].filter(Boolean).join("\n");
+  const contact=contactLines();
+  const bodyTxt=[cleanB,extra].filter(Boolean).join("");
+
+  const formal=
+`【${title}公告】
+
+${greet}
+
+${bodyTxt||"相關事項如下，敬請里民留意。"}
+${infoLines?infoLines+"\n":""}
+${pts.length?pts.map((p,i)=>"　"+"一二三四五六"[i]+"、"+p).join("\n")+"\n":""}
+${ps?("附註："+ps+"\n"):""}
+${closing}。如有疑問，歡迎洽詢里辦公處。
+${contact.length?contact.join("｜")+"\n":""}
+${signName()}`;
+
+  const line=
+`📢【${title}】📢
+
+${dt?("🗓️ "+dt+"\n"):""}${P?("📍 "+P+"\n"):""}${bodyTxt?("💬 "+bodyTxt+"\n"):""}
+${pts.length?pts.map(p=>"✅ "+p).join("\n")+"\n":""}
+${ps?("📌 附註："+ps+"\n"):""}
+${closing}
+${contact.length?contact.map(c=>"☎️ "+c).join("\n"):"有問題請找里長～"}`;
+
+  /* subtitle 留空：圖卡不放類別口號等非里長輸入的文字 */
+  return {title,subtitle:"",date:dt,place:P,points:pts,closing,ps,formal,line};
+}
+
+/* ══════════════ AI 生成 ══════════════ */
+async function aiBuild(cat,brief){
+  const dt=dateTimeStr(),P=$("dPlace").value.trim();
+  const extra=$("customNote").value.trim();
+  const contact=contactLines();
+  const tv=travelInfo();
+  const sys=`你是台灣資深里長的文宣幕僚，擅長社區公告。請依提供資訊生成公告，回傳「純JSON」，不要任何其他文字、不要markdown圍欄。格式：
+{"title":"主標題，最多8個字","subtitle":"副標題，最多14個字；無合適內容則空字串","date":"時間資訊，無則空字串","place":"地點，無則空字串","points":["重點條列，每條最多16字，共1到5條"],"closing":"文字版結語，最多14個字","ps":"附註內容（依里長提供，可稍作潤飾，最多30字；未提供則空字串）","formal":"正式公告全文，含稱謂、條列事項、附註、聯絡方式、結尾與落款，適合貼公佈欄","line":"LINE群組版全文，條列清楚，適量表情符號，附註以📌標示"}
+【最重要的規則】內容必須以「里長口述重點」為主體，「里長想補充的話」接續其後一併呈現。未提供的日期、時間、地點、金額、資格條件、本里提供的服務，一律不得自行編造或臆測。
+【圖卡文字規則】title、subtitle、points 會直接顯示在公告圖卡上：每一句都「必須」改寫自「里長口述重點」或「里長想補充的話」（旅遊資訊亦可），嚴禁自行加入任何里長沒有提到的祝福語、口號、提醒（例如「出入注意安全」「平安喜樂」「祝福全體里民」都不可自行加入）。若無合適的 subtitle 就回空字串，points 寧少勿濫。
+【結語規則】closing 只用於文字版結尾，必須和公告內容語意一致：節慶祝賀、關懷問候類用祝福語；通知、提醒、防詐類用叮嚀或感謝配合語。嚴禁套用與內容無關的制式句，例如祝賀類公告絕不可出現「麻煩大家互相轉告」「敬請配合辦理」。
+語氣親切自然、清楚好懂，使用台灣慣用繁體中文，適合社區長輩閱讀。落款：「${signName()}」。${contact.length?("聯絡方式請放入全文："+contact.join("、")+"。"):""}`;
+  const usr=`公告類別：${cat.nm}
+里長口述重點：${brief||"（未填，請依類別寫通用版本，仍不得編造具體資訊）"}
+里長想補充的話：${extra||"（未提供）"}
+日期時間：${dt||"（未提供，勿自行編造）"}
+地點：${P||"（未提供，勿自行編造）"}
+附註：${$("psNote").value.trim()||"（未提供）"}${tv.length?("\n旅遊資訊："+tv.map(([k,v])=>k+"："+v).join("；")):""}`;
+
+  const res=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1200,system:sys,
+      messages:[{role:"user",content:usr}]})
+  });
+  if(!res.ok)throw new Error("API "+res.status);
+  const data=await res.json();
+  const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
+  const j=JSON.parse(text.replace(/```json|```/g,"").trim());
+  j.points=(j.points||[]).slice(0,5);
+  j.title=(j.title||"里民公告").slice(0,10);
+  j.subtitle=(j.subtitle||"").slice(0,18);
+  j.closing=(j.closing||"").slice(0,16);
+  if(!j.date)j.date=dt;
+  if(!j.place)j.place=P;
+  if(!j.ps)j.ps=$("psNote").value.trim();
+  j.ps=(j.ps||"").slice(0,40);
+  return j;
+}
+
+/* ══════════════ 圖卡繪製（五種版面；標題與色塊全面加大間距，保證不重疊） ══════════════ */
+const FONT='"Noto Sans TC","Microsoft JhengHei",sans-serif';
+const SERIF='"Noto Serif TC","PMingLiU",serif';
+const W=1080,H=1350;
+const LAYOUT_COUNT=5;
+
+function wrapCJK(ctx,text,maxW){
+  const lines=[];let cur="";
+  for(const ch of text){
+    if(ch==="\n"){lines.push(cur);cur="";continue;}
+    if(ctx.measureText(cur+ch).width>maxW&&cur){lines.push(cur);cur=ch;}else cur+=ch;
+  }
+  if(cur)lines.push(cur);
+  return lines;
+}
+function fitText(ctx,text,maxW){
+  if(ctx.measureText(text).width<=maxW)return text;
+  let s=text;
+  while(s.length>1&&ctx.measureText(s+"…").width>maxW)s=s.slice(0,-1);
+  return s+"…";
+}
+function rrect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+}
+function pickEmoji(d,cat){
+  if(cat.id!=="festival")return{main:cat.em,side:cat.side};
+  const txt=(d.title||"")+(d.subtitle||"")+($("brief").value||"");
+  for(const [re,m,s] of FEST){if(new RegExp(re).test(txt))return{main:m,side:s};}
+  return{main:cat.em,side:cat.side};
+}
+function setLS(ctx,v){try{ctx.letterSpacing=v;}catch(e){}}
+
+let PSH=0;                            /* 附註區高度（有附註時保留） */
+function footTop(){return H-236;}     /* 落款帶上緣 */
+function safeLimit(){return footTop()-46-PSH;}  /* 內容安全底線：低於此不再畫字 */
+
+/* 底部落款帶（各版共用；左側文字限寬避開右側印章，署名獨立一行） */
+function drawFooter(ctx,T){
+  const fb=footTop();
+  ctx.fillStyle=T.deep;ctx.fillRect(34,fb,W-68,H-34-fb);
+  const s=state.settings;
+  const leftMax=W-360;
+  ctx.textAlign="left";ctx.textBaseline="middle";ctx.fillStyle="#FFFDF8";
+  ctx.font="700 44px "+FONT;
+  ctx.fillText(fitText(ctx,(liName()||"里辦公處")+"　"+(s.chief?"里長 "+s.chief+" 敬啟":"敬啟"),leftMax),90,fb+52);
+  ctx.font="31px "+FONT;
+  const l2=[s.office?("☎ 里辦 "+s.office):"",s.mobile?("📱 里長 "+s.mobile):""].filter(Boolean).join("　");
+  ctx.fillText(fitText(ctx,l2||"厝邊有代誌，來找里長",leftMax),90,fb+104);
+  const l3=[s.lineId?("LINE："+s.lineId):"",s.group?("群組："+s.group):""].filter(Boolean).join("　");
+  if(l3){ctx.font="29px "+FONT;ctx.fillText(fitText(ctx,l3,leftMax),90,fb+148);}
+  if(s.csu){
+    ctx.textAlign="right";ctx.font="24px "+FONT;ctx.globalAlpha=.85;
+    ctx.fillText("圖卡工具｜正修科技大學招生處提供",W-64,fb+190);
+    ctx.globalAlpha=1;
+  }
+  /* 朱紅印章 */
+  ctx.save();
+  ctx.translate(W-128,fb-6);ctx.rotate(-0.06);
+  ctx.strokeStyle="#B5372A";ctx.lineWidth=7;
+  ctx.beginPath();ctx.arc(0,0,70,0,Math.PI*2);
+  ctx.fillStyle="rgba(251,245,233,.93)";ctx.fill();ctx.stroke();
+  ctx.fillStyle="#B5372A";ctx.textAlign="center";
+  ctx.font="900 37px "+SERIF;
+  ctx.fillText("里辦",0,-18);ctx.fillText("公處",0,24);
+  ctx.restore();
+  return fb;
+}
+
+/* 插圖／照片繪製：
+   - AI 插圖（固定 840×440 比例）→ 滿版裁切填滿版面框
+   - 里長上傳的照片 → 「保持原始長寬比」完整置入，不裁切、不變形
+   回傳實際繪製高度，讓版面依實際高度往下排，不會重疊 */
+function drawIllust(ctx,illust,x,y,maxW,maxH,T){
+  let dw,dh,dx;
+  if(state.illustIsPhoto){
+    const sc=Math.min(maxW/illust.width,maxH/illust.height,1.6);
+    dw=illust.width*sc;dh=illust.height*sc;dx=x+(maxW-dw)/2;
+    rrect(ctx,dx,y,dw,dh,22);
+    ctx.save();ctx.clip();
+    ctx.drawImage(illust,dx,y,dw,dh);
+    ctx.restore();
+    rrect(ctx,dx,y,dw,dh,22);
+  }else{
+    dw=maxW;dh=maxH;dx=x;
+    rrect(ctx,dx,y,dw,dh,22);
+    ctx.save();ctx.clip();
+    const sc=Math.max(dw/illust.width,dh/illust.height);
+    ctx.drawImage(illust,dx+(dw-illust.width*sc)/2,y+(dh-illust.height*sc)/2,illust.width*sc,illust.height*sc);
+    ctx.restore();
+    rrect(ctx,dx,y,dw,dh,22);
+  }
+  ctx.strokeStyle=T.deep;ctx.lineWidth=5;ctx.stroke();
+  /* 小字標明「插圖由 ChatGPT 生成」（僅在圖片經「放入 ChatGPT 生成的圖片」放入且開關打開時顯示） */
+  if(state.gptCredit&&state.illustFromGpt){
+    ctx.font="500 24px "+FONT;
+    const t="插圖由 ChatGPT 生成";
+    const tw=ctx.measureText(t).width;
+    const pw=tw+30,ph=40,px=dx+dw-pw-12,py=y+dh-ph-12;
+    rrect(ctx,px,py,pw,ph,20);
+    ctx.fillStyle="rgba(0,0,0,.45)";ctx.fill();
+    ctx.fillStyle="#FFFFFF";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText(t,px+pw/2,py+ph/2+1);
+    ctx.textAlign="left";ctx.textBaseline="alphabetic";
+  }
+  return dh;
+}
+/* 條列重點：逐條檢查是否超出安全底線，超出就不畫（保證不與附註、落款重疊） */
+function drawPoints(ctx,pts,T,x,y,pw,pFont,pLH,limitY){
+  ctx.textAlign="left";ctx.textBaseline="alphabetic";
+  ctx.font=`500 ${pFont}px `+FONT;
+  for(const p of pts){
+    const ls=wrapCJK(ctx,p,pw-66);
+    if(y+ls.length*pLH>limitY)break;
+    ctx.fillStyle=T.deep;
+    ctx.beginPath();ctx.arc(x+15,y-pFont*0.32,10,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#33302A";
+    ls.forEach(l=>{ctx.fillText(l,x+50,y);y+=pLH;});
+    y+=16;
+  }
+  return y;
+}
+function drawInfoCard(ctx,d,T,y,cw,fontPx){
+  const info=[];
+  if(d.date)info.push("🗓️  "+d.date);
+  if(d.place)info.push("📍  "+d.place);
+  if(!info.length)return y;
+  ctx.font=`${fontPx}px `+FONT;
+  const rowH=fontPx+34;
+  const ih=info.length*rowH+30;
+  const x=(W-cw)/2;
+  rrect(ctx,x,y,cw,ih,20);
+  ctx.fillStyle="#FFFFFF";ctx.fill();
+  ctx.strokeStyle=T.light;ctx.lineWidth=3;ctx.stroke();
+  ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillStyle="#33302A";
+  let iy=y+18+rowH/2;
+  info.forEach(t=>{ctx.fillText(fitText(ctx,t,cw-60),W/2,iy);iy+=rowH;});
+  ctx.textBaseline="alphabetic";
+  return y+ih+48;
+}
+
+/* 版面 A：經典置中（明體大標） */
+function layoutA(ctx,d,cat,illust,T,em){
+  let y=118;
+  ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.font="700 40px "+FONT;
+  const bTxt=cat.nm;
+  const bw=ctx.measureText(bTxt).width+72;
+  rrect(ctx,(W-bw)/2,y-44,bw,82,41);
+  ctx.fillStyle=T.deep;ctx.fill();
+  ctx.fillStyle="#FFFDF8";ctx.fillText(bTxt,W/2,y-2);
+  ctx.textBaseline="alphabetic";
+
+  const hasImg=!!illust;
+  if(hasImg){y+=64;const ih=drawIllust(ctx,illust,(W-820)/2,y,820,410,T);y+=ih+108;}
+  else{
+    y+=192;ctx.textBaseline="middle";
+    ctx.globalAlpha=.55;ctx.font="76px "+FONT;
+    ctx.fillText(em.side[0],W/2-235,y);ctx.fillText(em.side[1],W/2+235,y);
+    ctx.globalAlpha=1;ctx.font="150px "+FONT;ctx.fillText(em.main,W/2,y);
+    ctx.textBaseline="alphabetic";y+=172;
+  }
+  ctx.textAlign="center";ctx.fillStyle="#33302A";
+  ctx.font=`900 ${hasImg?80:94}px `+SERIF;
+  wrapCJK(ctx,d.title,W-200).slice(0,2).forEach(l=>{ctx.fillText(l,W/2,y);y+=hasImg?98:112;});
+  if(d.subtitle){
+    y+=6;
+    ctx.font=`500 ${hasImg?42:46}px `+FONT;ctx.fillStyle=T.deep;
+    ctx.fillText(fitText(ctx,d.subtitle,W-220),W/2,y);y+=hasImg?70:80;
+  }else{y+=8;}
+  y=drawInfoCard(ctx,d,T,y,W-220,hasImg?38:42);
+  drawPoints(ctx,(d.points||[]).slice(0,hasImg?3:5),T,150,y,W-300,hasImg?40:43,hasImg?58:64,safeLimit());
+}
+
+/* 版面 B：色帶大標（黑體、字距寬；標題與類別列已加大間距不重疊） */
+function layoutB(ctx,d,cat,illust,T,em){
+  const bandH=300;
+  ctx.fillStyle=T.deep;ctx.fillRect(34,34,W-68,bandH);
+  ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillStyle="rgba(255,253,248,.85)";
+  ctx.font="700 34px "+FONT;
+  setLS(ctx,"10px");
+  ctx.fillText(cat.nm,W/2,92);
+  setLS(ctx,"0px");
+  ctx.fillStyle="#FFFDF8";
+  const tl0=(()=>{ctx.font="900 84px "+FONT;return wrapCJK(ctx,d.title,W-180).slice(0,2);})();
+  const two=tl0.length>1;
+  ctx.font=`900 ${two?74:84}px `+FONT;
+  setLS(ctx,"6px");
+  let ty=two?184:206;
+  tl0.forEach(l=>{ctx.fillText(l,W/2,ty);ty+=two?90:0;});
+  setLS(ctx,"0px");
+  if(d.subtitle&&!two){
+    ctx.font="500 40px "+FONT;ctx.fillStyle="rgba(255,253,248,.9)";
+    ctx.fillText(fitText(ctx,d.subtitle,W-220),W/2,278);
+  }
+  ctx.textBaseline="alphabetic";
+
+  let y=bandH+104;
+  const hasImg=!!illust;
+  if(hasImg){const ih=drawIllust(ctx,illust,(W-800)/2,y-42,800,380,T);y+=ih-42+78;}
+  else{
+    ctx.textBaseline="middle";
+    ctx.font="130px "+FONT;ctx.fillText(em.main,W/2,y+8);
+    ctx.globalAlpha=.5;ctx.font="66px "+FONT;
+    ctx.fillText(em.side[0],W/2-215,y+18);ctx.fillText(em.side[1],W/2+215,y+18);
+    ctx.globalAlpha=1;ctx.textBaseline="alphabetic";
+    y+=150;
+  }
+  y=drawInfoCard(ctx,d,T,y,W-240,hasImg?38:42);
+  drawPoints(ctx,(d.points||[]).slice(0,hasImg?3:5),T,160,y,W-320,hasImg?40:42,hasImg?58:62,safeLimit());
+}
+
+/* 版面 C：直書紅幅（傳統告示） */
+function layoutC(ctx,d,cat,illust,T,em){
+  const fb=footTop();
+  const sx=W-206,sw=142;
+  ctx.fillStyle=T.deep;
+  rrect(ctx,sx,60,sw,fb-120,16);ctx.fill();
+  ctx.fillStyle="#A8781F";
+  ctx.beginPath();ctx.arc(sx+sw/2,60,10,0,Math.PI*2);ctx.fill();
+  ctx.fillRect(sx+sw/2-2,26,4,34);
+  ctx.fillStyle="#FFFDF8";ctx.textAlign="center";ctx.textBaseline="middle";
+  const chars=[...d.title].slice(0,9);
+  ctx.font="900 92px "+SERIF;
+  const span=Math.min(118,(fb-220)/Math.max(chars.length,1));
+  let cy=60+((fb-120)-chars.length*span)/2+span/2;
+  chars.forEach(ch=>{ctx.fillText(ch,sx+sw/2,cy);cy+=span;});
+  ctx.textBaseline="alphabetic";
+
+  const cx=86,cwid=sx-cx-46;
+  let y=150;
+  ctx.textAlign="left";
+  ctx.font="700 36px "+FONT;
+  const bTxt=cat.nm;
+  const bw=ctx.measureText(bTxt).width+56;
+  rrect(ctx,cx,y-40,bw,74,37);
+  ctx.fillStyle=T.deep;ctx.fill();
+  ctx.fillStyle="#FFFDF8";ctx.textBaseline="middle";
+  ctx.fillText(bTxt,cx+28,y-2);
+  ctx.textBaseline="alphabetic";
+  y+=104;
+
+  const hasImg=!!illust;
+  if(hasImg){const ih=drawIllust(ctx,illust,cx,y-30,cwid,360,T);y+=ih-30+66;}
+  else{
+    ctx.textBaseline="middle";
+    ctx.font="150px "+FONT;ctx.fillText(em.main,cx+20,y+70);
+    ctx.globalAlpha=.5;ctx.font="72px "+FONT;
+    ctx.fillText(em.side[0],cx+270,y+30);ctx.fillText(em.side[1],cx+270,y+130);
+    ctx.globalAlpha=1;ctx.textBaseline="alphabetic";
+    y+=240;
+  }
+  if(d.subtitle){
+    ctx.font="700 46px "+FONT;ctx.fillStyle=T.deep;
+    wrapCJK(ctx,d.subtitle,cwid).slice(0,2).forEach(l=>{ctx.fillText(l,cx,y);y+=62;});
+    y+=12;
+  }
+  ctx.font="500 42px "+FONT;ctx.fillStyle="#33302A";
+  if(d.date){ctx.fillText(fitText(ctx,"🗓️ "+d.date,cwid),cx,y);y+=64;}
+  if(d.place){ctx.fillText(fitText(ctx,"📍 "+d.place,cwid),cx,y);y+=72;}
+  y+=6;
+  drawPoints(ctx,(d.points||[]).slice(0,hasImg?3:5),T,cx,y,cwid,hasImg?38:41,hasImg?56:60,safeLimit());
+}
+
+/* 版面 D：雜誌左對齊（大標靠左、金線分隔；膠囊與大標間距已加大不重疊） */
+function layoutD(ctx,d,cat,illust,T,em){
+  const cx=96,cw=W-192;
+  let y=150;
+  ctx.textAlign="left";ctx.textBaseline="middle";
+  ctx.font="700 34px "+FONT;
+  const bw=ctx.measureText(cat.nm).width+52;
+  rrect(ctx,cx,y-52,bw,68,34);ctx.fillStyle=T.deep;ctx.fill();
+  ctx.fillStyle="#FFFDF8";ctx.fillText(cat.nm,cx+26,y-18);
+  ctx.textAlign="left";ctx.textBaseline="alphabetic";
+  y+=140;   /* 大標題與上方膠囊保留足夠間距 */
+  ctx.fillStyle="#33302A";ctx.font="900 92px "+SERIF;
+  wrapCJK(ctx,d.title,cw).slice(0,2).forEach(l=>{ctx.fillText(l,cx,y);y+=110;});
+  y-=22;
+  ctx.fillStyle="#A8781F";ctx.fillRect(cx,y,160,8);
+  y+=64;
+  if(d.subtitle){
+    ctx.font="500 44px "+FONT;ctx.fillStyle=T.deep;
+    ctx.fillText(fitText(ctx,d.subtitle,cw),cx,y);y+=70;
+  }
+  const hasImg=!!illust;
+  if(hasImg){y+=4;const ih=drawIllust(ctx,illust,cx,y,cw,370,T);y+=ih+70;}
+  else{
+    ctx.textBaseline="middle";
+    ctx.font="96px "+FONT;ctx.fillText(em.main,cx+10,y+40);
+    ctx.globalAlpha=.55;ctx.font="60px "+FONT;
+    ctx.fillText(em.side[0],cx+190,y+46);ctx.fillText(em.side[1],cx+300,y+46);
+    ctx.globalAlpha=1;ctx.textBaseline="alphabetic";
+    y+=140;
+  }
+  ctx.font="500 42px "+FONT;ctx.fillStyle="#33302A";
+  if(d.date){ctx.fillText(fitText(ctx,"🗓️ "+d.date,cw),cx,y);y+=64;}
+  if(d.place){ctx.fillText(fitText(ctx,"📍 "+d.place,cw),cx,y);y+=72;}
+  y+=6;
+  drawPoints(ctx,(d.points||[]).slice(0,hasImg?3:5),T,cx,y,cw,hasImg?39:42,hasImg?56:62,safeLimit());
+}
+
+/* 版面 E：斜角色塊（現代海報感；色塊上文字間距已加大不重疊） */
+function layoutE(ctx,d,cat,illust,T,em){
+  ctx.fillStyle=T.deep;
+  ctx.beginPath();ctx.moveTo(28,28);ctx.lineTo(W-28,28);ctx.lineTo(W-28,330);ctx.lineTo(28,410);ctx.closePath();ctx.fill();
+  ctx.fillStyle=T.light;
+  ctx.beginPath();ctx.moveTo(28,410);ctx.lineTo(W-28,330);ctx.lineTo(W-28,354);ctx.lineTo(28,434);ctx.closePath();ctx.fill();
+  ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillStyle="rgba(255,253,248,.85)";
+  ctx.font="700 32px "+FONT;setLS(ctx,"8px");
+  ctx.fillText(cat.nm,W/2,90);setLS(ctx,"0px");
+  ctx.fillStyle="#FFFDF8";
+  const tls=(()=>{ctx.font="900 84px "+SERIF;return wrapCJK(ctx,d.title,W-220).slice(0,2);})();
+  const two=tls.length>1;
+  ctx.font=`900 ${two?76:84}px `+SERIF;
+  let ty=two?176:202;
+  tls.forEach(l=>{ctx.fillText(l,W/2,ty);ty+=two?92:0;});
+  if(d.subtitle&&!two){
+    ctx.font="500 40px "+FONT;ctx.fillStyle="rgba(255,253,248,.92)";
+    ctx.fillText(fitText(ctx,d.subtitle,W-240),W/2,278);
+  }
+  ctx.textBaseline="alphabetic";
+
+  let y=506;
+  const hasImg=!!illust;
+  if(hasImg){const ih=drawIllust(ctx,illust,(W-780)/2,y-44,780,360,T);y+=ih-44+66;}
+  else{
+    ctx.textBaseline="middle";
+    ctx.font="120px "+FONT;ctx.fillText(em.main,W/2,y+6);
+    ctx.globalAlpha=.5;ctx.font="62px "+FONT;
+    ctx.fillText(em.side[0],W/2-205,y+14);ctx.fillText(em.side[1],W/2+205,y+14);
+    ctx.globalAlpha=1;ctx.textBaseline="alphabetic";
+    y+=140;
+  }
+  y=drawInfoCard(ctx,d,T,y,W-260,hasImg?36:40);
+  drawPoints(ctx,(d.points||[]).slice(0,hasImg?3:5),T,170,y,W-340,hasImg?38:42,hasImg?56:62,safeLimit());
+}
+
+function drawPoster(d,cat,illust){
+  const ctx=$("poster").getContext("2d");
+  const T=cat.theme,em=pickEmoji(d,cat);
+  PSH=(d.ps&&d.ps.trim())?96:0;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=T.bg;ctx.fillRect(0,0,W,H);
+  /* 不再繪製角落浮水印圖示：徹底避免任何文字或圖示與內容重疊 */
+  ctx.strokeStyle=T.deep;ctx.lineWidth=6;ctx.strokeRect(28,28,W-56,H-56);
+  if(state.variant!==1&&state.variant!==4){ctx.lineWidth=2;ctx.strokeRect(44,44,W-88,H-88);}
+  ctx.strokeStyle="#A8781F";ctx.lineWidth=4;
+  [[44,44,1,1],[W-44,44,-1,1],[44,H-44,1,-1],[W-44,H-44,-1,-1]].forEach(([x,y,dx,dy])=>{
+    ctx.beginPath();ctx.moveTo(x+dx*36,y);ctx.lineTo(x,y);ctx.lineTo(x,y+dy*36);ctx.stroke();
+  });
+
+  [layoutA,layoutB,layoutC,layoutD,layoutE][state.variant](ctx,d,cat,illust,T,em);
+  /* 附註（PS）：落款帶上方獨立保留區（PSH），與內容、印章、落款皆不重疊 */
+  if(PSH){
+    const fb=footTop();
+    ctx.textAlign="left";ctx.textBaseline="alphabetic";
+    ctx.font="italic 500 33px "+FONT;ctx.fillStyle="#6B6455";
+    const ls=wrapCJK(ctx,"※ 附註："+d.ps.trim(),W-330).slice(0,2);
+    let py=ls.length===2?fb-74:fb-36;
+    ls.forEach(l=>{ctx.fillText(l,90,py);py+=42;});
+  }
+  drawFooter(ctx,T);
+  ctx.textAlign="center";ctx.textBaseline="alphabetic";
+}
+
+/* ══════════════ AI 插圖：以「公告內容」為 Prompt → 貼到 ChatGPT 生成 → 放入圖卡 ══════════════ */
+/* 取「公告內容＋里長補充」作為 prompt 主體 */
+function briefForPrompt(){
+  const b=($("brief").value||"").replace(/【[^】]*】/g,"").trim();
+  const e=($("customNote").value||"").trim();
+  const t=[b,e].filter(Boolean).join("；");
+  const r=scrubPII(t);lastPII=r.hits;          /* v7.1：送往外部 AI 前先過濾個資 */
+  return r.text||(state.data?state.data.title:"");
+}
+/* 貼到 ChatGPT 用的 prompt：公告內容文字為主體（中文，複製即用；場景維持現代高雄都會） */
+function buildGptPrompt(){
+  return "請生成一張社區公告插圖，畫面中不要出現任何文字。\n"
+    +"公告內容（畫面主題）："+briefForPrompt()+"\n"
+    +"場景：現代化的台灣高雄都會社區，現代建築與公共設施，畫面明亮、乾淨、有活力，人物親切自然。\n"
+    +"避免：老舊建築、鄉村景象、復古懷舊氛圍、昏暗、浮水印、任何文字。\n"
+    +"比例：橫式，約 1.9:1（840×440）。";
+}
+function refreshGptPrompt(){
+  const box=$("gptPrompt");
+  if(box)box.textContent=buildGptPrompt();
+  const n=$("gptPII");
+  if(n){const t=piiNoteText();n.textContent=t;n.classList.toggle("hide",!t);}
+}
+
+/* ══════════════ 介面互動 ══════════════ */
+const catsEl=$("cats");
+function renderExamples(){
+  const box=$("exList");box.innerHTML="";
+  state.cat.ex.forEach((t,i)=>{
+    const b=document.createElement("button");
+    b.type="button";b.className="ex";
+    const m=t.match(/^【([^】]+)】(.*)$/);
+    b.innerHTML=m?`<b>${m[1]}</b>${m[2]}`:`<b>範例${i+1}</b>${t}`;
+    b.onclick=()=>{$("brief").value=t;$("brief").focus();};
+    box.appendChild(b);
+  });
+}
+function switchCat(c,btn){
+  state.cat=c;
+  document.querySelectorAll(".cat").forEach(x=>x.classList.remove("on"));
+  btn.classList.add("on");
+  ["brief","dStart","dEnd","tStart","tEnd","dPlace","customNote","psNote","tDest","tFee","tSign","tDue","tQuota","tMeet"]
+    .forEach(id=>{$(id).value="";});
+  $("brief").placeholder="例如："+c.ex[0].replace(/^【[^】]*】/,"");
+  $("travelExtra").classList.toggle("hide",c.id!=="travel");
+  state.illust=null;state.illustIsPhoto=false;state.illustFromGpt=false;
+  renderExamples();
+  $("status").textContent="";
+}
+CATS.forEach((c,i)=>{
+  const b=document.createElement("button");
+  b.type="button";b.className="cat"+(i===0?" on":"");
+  b.innerHTML=`<span class="em">${c.em}</span><span class="nm">${c.nm}</span>`;
+  b.onclick=()=>switchCat(c,b);
+  catsEl.appendChild(b);
+});
+renderExamples();
+$("brief").placeholder="例如："+CATS[0].ex[0];
+
+/* 產生 */
+async function generate(){
+  const btn=$("goBtn"),st=$("status");
+  btn.disabled=true;st.className="";st.textContent="正在為您撰寫公告，請稍候…";
+  const brief=$("brief").value;
+  state.illust=null;state.illustIsPhoto=false;state.illustFromGpt=false;
+  state.variant=Math.floor(Math.random()*LAYOUT_COUNT);   /* 每次隨機版面，里民有新鮮感 */
+  $("artPanel").classList.add("hide");
+  const dt0=$("directTopic");if(dt0){dt0.classList.add("hide");dt0.textContent="";}
+  let d;
+  try{
+    d=await aiBuild(state.cat,brief);
+    st.textContent="✅ AI 撰寫完成！可按「🎨 AI 插圖」直接生成或用 ChatGPT 產出插圖，或「🔀 換個版面」變化樣式。";
+  }catch(e){
+    d=fallbackBuild(state.cat,brief);
+    st.textContent="已使用內建範本完成（目前無法連線 AI，內容一樣可以直接用）。";
+  }
+  state.data=d;
+  drawPoster(d,state.cat,null);
+  $("formalTxt").textContent=d.formal;
+  $("lineTxt").textContent=d.line;
+  $("result").style.display="block";
+  $("result").scrollIntoView({behavior:"smooth"});
+  btn.disabled=false;
+}
+$("goBtn").onclick=generate;
+
+/* 🎨 AI 插圖：兩種方式（直接生成／ChatGPT），主題皆取自「公告內容」 */
+let pendingGpt=false;   /* 標記接下來選的圖片是否來自 ChatGPT（決定是否加小字署名） */
+$("artBtn").onclick=()=>{
+  if(!state.data){
+    $("status").className="err";
+    $("status").textContent="請先按「產生公告」，再做 AI 插圖。";
+    return;
+  }
+  refreshGptPrompt();
+  const p=$("artPanel");
+  p.classList.remove("hide");
+  p.scrollIntoView({behavior:"smooth",block:"nearest"});
+  $("status").className="";
+  $("status").textContent="請選擇插圖方式：✨ 直接生成（免帳號），或 💬 複製 Prompt 貼到 ChatGPT。";
+};
+
+/* ── 方式一：直接生成（Pollinations／Flux 免費引擎，免帳號免金鑰） ──
+   相關性保證：先把「公告內容」交給 AI 翻成英文畫面描述（連不上時退回類別場景），
+   再送 Pollinations 生成；生成前於畫面顯示「本次插圖主題」讓里長確認與公告一致。 */
+async function sceneFromBrief(){
+  const brief=briefForPrompt();
+  if(!brief)return state.cat.art;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:200,
+        system:"You translate a Taiwanese community announcement into ONE concise English scene description for an AI image generator. Describe only concrete visual elements (people, actions, objects, setting) that directly depict the announcement topic. Under 40 words. No quotes, no text-in-image, reply with the description only.",
+        messages:[{role:"user",content:brief}]})
+    });
+    if(!res.ok)throw new Error("API "+res.status);
+    const data=await res.json();
+    const t=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(" ").trim();
+    if(t)return scrubPII(t.replace(/["\n]/g," ")).text.slice(0,320);
+  }catch(e){}
+  return state.cat.art;   /* 離線保底：類別對應的現代都會場景 */
+}
+$("directGenBtn").onclick=async()=>{
+  if(!state.data){
+    $("status").className="err";
+    $("status").textContent="請先按「產生公告」，再做 AI 插圖。";
+    return;
+  }
+  const b=$("directGenBtn"),st=$("status"),topic=$("directTopic");
+  b.disabled=true;
+  st.className="";st.textContent="⏳ 正在依「公告內容」生成插圖（免費引擎約需 10～30 秒），請稍候…";
+  topic.classList.remove("hide");
+  topic.textContent="🖼️ 本次插圖主題（取自公告內容）："+(briefForPrompt()||state.data.title)
+    +(piiNoteText()?"\n"+piiNoteText():"");
+  topic.style.whiteSpace="pre-wrap";
+  const scene=await sceneFromBrief();
+  const prompt=scene
+    +", modern Kaohsiung Taiwan urban community, contemporary buildings and public spaces"
+    +", bright clean vibrant colors, friendly natural people"
+    +", modern flat vector illustration style, trendy editorial illustration, high quality"
+    +", no text, no letters, no words, no watermark, no logo"
+    +", no old rural village, no vintage, no retro, no dark gloomy tones";
+  const seed=Math.floor(Math.random()*1e9);
+  const url="https://image.pollinations.ai/prompt/"+encodeURIComponent(prompt)
+    +"?width=840&height=440&nologo=true&model=flux&seed="+seed;
+  const img=new Image();
+  img.crossOrigin="anonymous";   /* 允許畫入 canvas 後下載 */
+  let done=false;
+  const timer=setTimeout(()=>{
+    if(done)return;done=true;img.src="";
+    b.disabled=false;
+    st.className="err";
+    st.textContent="生成逾時：免費引擎目前較忙，請再按一次重試，或改用「方式二」貼到 ChatGPT 生成。";
+  },75000);
+  img.onload=()=>{
+    if(done)return;done=true;clearTimeout(timer);
+    state.illust=img;
+    state.illustIsPhoto=false;      /* AI 插圖 840×440 → 滿版置入 */
+    state.illustFromGpt=false;      /* 非 ChatGPT 來源，不加 ChatGPT 署名 */
+    drawPoster(state.data,state.cat,img);
+    b.disabled=false;
+    st.className="";
+    st.textContent="✅ 插圖已生成並放入圖卡！主題取自公告內容；不滿意可再按一次換一張，或按「🔀 換個版面」。";
+  };
+  img.onerror=()=>{
+    if(done)return;done=true;clearTimeout(timer);
+    b.disabled=false;
+    st.className="err";
+    st.textContent="生成失敗：免費引擎暫時無法連線，請稍後重試，或改用「方式二」貼到 ChatGPT 生成。";
+  };
+  img.src=url;
+};
+
+/* 複製 Prompt 貼到 ChatGPT */
+$("copyPromptBtn").onclick=async()=>{
+  refreshGptPrompt();
+  const txt=$("gptPrompt").textContent;
+  const b=$("copyPromptBtn");
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){
+    const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);
+    ta.select();document.execCommand("copy");ta.remove();
+  }
+  b.textContent="✅ 已複製！貼到 ChatGPT 即可生成";
+  setTimeout(()=>{b.textContent="📋 複製 Prompt（貼到 ChatGPT）";},2200);
+};
+
+/* 放入 ChatGPT 生成的圖片（沿用照片選擇器；此路徑會標記 ChatGPT 來源） */
+$("insertGptBtn").onclick=()=>{
+  if(!state.data)return;
+  pendingGpt=true;
+  $("photoFile").click();
+};
+
+/* 圖卡小字標明「插圖由 ChatGPT 生成」 */
+$("gptCredit").onchange=()=>{
+  state.gptCredit=$("gptCredit").checked;
+  if(state.data&&state.illust)drawPoster(state.data,state.cat,state.illust);
+};
+
+/* 里長的照片／圖檔嵌入圖卡（保持原始長寬比，不裁切、不變形） */
+$("photoBtn").onclick=()=>{
+  if(!state.data){
+    $("status").className="err";
+    $("status").textContent="請先按「產生公告」，再放照片。";
+    return;
+  }
+  pendingGpt=false;   /* 一般照片不加 ChatGPT 署名 */
+  $("photoFile").click();
+};
+$("photoFile").onchange=e=>{
+  const f=e.target.files&&e.target.files[0];
+  if(!f){pendingGpt=false;return;}
+  const st=$("status");
+  if(!f.type.startsWith("image/")){
+    pendingGpt=false;
+    st.className="err";st.textContent="請選擇圖片檔（JPG、PNG、HEIC 轉存的 JPG 皆可）。";
+    return;
+  }
+  const fromGpt=pendingGpt;pendingGpt=false;
+  const rd=new FileReader();
+  rd.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      state.illust=img;
+      state.illustIsPhoto=true;       /* 照片保持原始比例呈現 */
+      state.illustFromGpt=fromGpt;    /* ChatGPT 圖片 → 依開關加小字署名 */
+      drawPoster(state.data,state.cat,img);
+      st.className="";
+      st.textContent=fromGpt
+        ?"✅ ChatGPT 插圖已放入圖卡（保持原比例）！可按「🔀 換個版面」看不同擺法。"
+        :"✅ 照片已放入圖卡（保持原比例）！可按「🔀 換個版面」看不同擺法，或直接下載。";
+    };
+    img.onerror=()=>{st.className="err";st.textContent="這張圖片無法讀取，請換一張試試。";};
+    img.src=ev.target.result;
+  };
+  rd.readAsDataURL(f);
+  e.target.value="";   /* 允許重選同一張 */
+};
+$("layoutBtn").onclick=()=>{
+  if(!state.data)return;
+  state.variant=(state.variant+1)%LAYOUT_COUNT;
+  drawPoster(state.data,state.cat,state.illust);
+};
+
+document.querySelectorAll(".tab").forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+    document.querySelectorAll(".pane").forEach(x=>x.classList.remove("on"));
+    t.classList.add("on");
+    $(t.dataset.pane).classList.add("on");
+  };
+});
+
+$("dlBtn").onclick=()=>{
+  try{
+    const a=document.createElement("a");
+    a.download=(liName()||"里")+"公告_"+(state.data?state.data.title:"圖卡")+".png";
+    a.href=$("poster").toDataURL("image/png");
+    a.click();
+  }catch(e){
+    $("status").className="err";
+    $("status").textContent="下載失敗：插圖來源不允許存檔，請先按「產生公告」重畫後再下載。";
+  }
+};
+
+document.querySelectorAll("[data-copy]").forEach(b=>{
+  b.onclick=async()=>{
+    const txt=$(b.dataset.copy).textContent;
+    try{await navigator.clipboard.writeText(txt);b.textContent="✅ 已複製！";}
+    catch(e){
+      const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);
+      ta.select();document.execCommand("copy");ta.remove();b.textContent="✅ 已複製！";
+    }
+    setTimeout(()=>{b.textContent="📋 "+(b.dataset.copy==="formalTxt"?"複製正式公告":"複製 LINE 版");},1600);
+  };
+});
+
+$("setBtn").onclick=()=>{
+  const s=state.settings;
+  $("sLi").value=s.li;$("sChief").value=s.chief;$("sOffice").value=s.office;
+  $("sMobile").value=s.mobile;$("sLineId").value=s.lineId;$("sGroup").value=s.group;
+  $("sCSU").checked=s.csu;
+  cfgMsg("");cfgBanner("");
+  $("drawer").classList.add("on");
+};
+$("drawer").onclick=e=>{if(e.target.id==="drawer")$("drawer").classList.remove("on");};
+$("saveSet").onclick=()=>{
+  saveSettings();
+  cfgMsg("");cfgBanner("");
+  $("drawer").classList.remove("on");
+  if(state.data)drawPoster(state.data,state.cat,state.illust);
+};
+
+/* 複製設定連結（資料放在 # 之後，不會傳到網站伺服器） */
+$("cfgLinkBtn").onclick=async()=>{
+  const o=cfgFromFields();
+  if(!o.li&&!o.chief){cfgMsg("請先填好里名或里長姓名。",true);return;}
+  await copyText(appBaseUrl()+"#cfg="+b64enc(JSON.stringify(o)));
+  cfgMsg("✅ 已複製設定連結。傳到自己的 LINE（或交給接任里長），在新手機點開即可帶入。");
+};
+/* 下載設定檔（JSON） */
+$("cfgFileBtn").onclick=()=>{
+  const o=cfgFromFields();
+  if(!o.li&&!o.chief){cfgMsg("請先填好里名或里長姓名。",true);return;}
+  o.exportedAt=new Date().toISOString().slice(0,10);
+  const blob=new Blob([JSON.stringify(o,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="厝邊快報設定_"+(o.li?(o.li.endsWith("里")?o.li:o.li+"里"):"里")+".json";
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  cfgMsg("✅ 設定檔已下載。請妥善保管，交接時再交給接任里長。");
+};
+/* 匯入：先帶入欄位讓里長確認，按「儲存」才生效 */
+$("cfgImportBtn").onclick=()=>{
+  try{
+    cfgFillFields(cfgParseText($("cfgIn").value));
+    $("cfgIn").value="";
+    cfgMsg("");cfgBanner("📥 已帶入資料。請確認（交接時改成新任里長的資料）後按「儲存」，才會存到這支手機。");
+    $("drawer").querySelector(".sheet").scrollTo({top:0,behavior:"smooth"});
+  }catch(e){cfgMsg("匯入失敗："+(e.message&&/[\u4e00-\u9fff]/.test(e.message)?e.message:"連結或設定碼不完整，請重新複製後再貼上。"),true);}
+};
+$("cfgPickBtn").onclick=()=>$("cfgFile").click();
+$("cfgFile").onchange=e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=ev=>{
+    try{
+      cfgFillFields(cfgValidate(JSON.parse(ev.target.result)));
+      cfgMsg("");cfgBanner("📥 已從設定檔帶入資料。請確認後按「儲存」，才會存到這支手機。");
+      $("drawer").querySelector(".sheet").scrollTo({top:0,behavior:"smooth"});
+    }catch(err){cfgMsg("這個檔案不是厝邊快報的設定檔，請重新選擇。",true);}
+  };
+  rd.readAsText(f);e.target.value="";
+};
+/* 清除本機資料（交接後舊手機、或借用別人的手機時使用）：按兩次才執行 */
+let clearArmed=null;
+$("cfgClearBtn").onclick=()=>{
+  const b=$("cfgClearBtn");
+  if(!clearArmed){
+    b.textContent="⚠ 再按一次，確定清除";
+    clearArmed=setTimeout(()=>{clearArmed=null;b.textContent="🧹 清除這支手機的里資料";},4000);
+    return;
+  }
+  clearTimeout(clearArmed);clearArmed=null;
+  CFG_FIELDS.forEach(([k,id])=>{store.del(k);state.settings[k]="";$(id).value="";});
+  store.del("csu");state.settings.csu=true;$("sCSU").checked=true;
+  b.textContent="🧹 清除這支手機的里資料";
+  refreshDreamLink();
+  if(state.data)drawPoster(state.data,state.cat,state.illust);
+  cfgMsg("✅ 這支手機的里資料已清除。");
+};
+
+/* 開啟「設定連結」時：自動帶入欄位並打開設定面板，由里長確認後按「儲存」 */
+(function importFromHash(){
+  const m=(location.hash||"").match(/#cfg=([A-Za-z0-9_-]+)/);
+  if(!m)return;
+  try{history.replaceState(null,"",location.pathname+location.search);}catch(e){}
+  try{
+    const o=cfgValidate(JSON.parse(b64dec(m[1])));
+    cfgFillFields(o);
+    $("drawer").classList.add("on");
+    cfgBanner("📥 已從設定連結帶入「"+(o.li||"")+(o.chief?"｜里長 "+o.chief:"")+"」的資料。請確認後按「儲存」，才會存到這支手機。");
+  }catch(e){
+    $("drawer").classList.add("on");
+    cfgMsg("這個設定連結不完整，請對方重新複製後再傳一次。",true);
+  }
+})();
+refreshDreamLink();
+</script>
+</body>
+</html>

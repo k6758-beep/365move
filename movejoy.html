@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>樂動 365｜據點帶操版</title>
+<meta name="description" content="社區關懷據點的長輩帶操工具：20 分鐘據點帶操、5 分鐘探訪伸展、30 秒坐站季測與出席紀錄。正修科技大學 USR。">
+<meta name="theme-color" content="#2E7D5B">
+<style>
+  :root{
+    --paper:#FBF5E9;--vermilion:#B5372A;--ink:#33302A;--gold:#A8781F;--civic:#1F5F73;
+    --jade:#2E7D5B;--jade-deep:#1F5E43;--amber:#C27A12;--line:#E4D9C3;--mute:#87806F;--card:#fff;
+    --shadow:0 4px 16px rgba(51,48,42,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{font-size:17px}
+  body{font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;min-height:100vh}
+  button,input,select{font-family:inherit;font-size:1rem;color:inherit}
+  button{cursor:pointer}
+  button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .hide{display:none!important}
+  .wrap{max-width:820px;margin:0 auto;padding:18px 14px 60px}
+
+  header.bar{background:linear-gradient(160deg,#3A8F69,var(--jade-deep));color:#FDF6E9;border-radius:20px;padding:18px;box-shadow:0 8px 22px rgba(31,94,67,.28)}
+  header.bar .row{display:flex;align-items:center;gap:12px}
+  .logo{width:56px;height:56px;flex:0 0 56px;border-radius:50%;border:3px solid #FDF6E9;display:flex;align-items:center;justify-content:center;
+    font-family:"Noto Serif TC","PMingLiU",serif;font-weight:900;font-size:1.25rem;background:rgba(253,246,233,.1)}
+  header.bar h1{font-family:"Noto Serif TC","PMingLiU",serif;font-size:1.6rem;letter-spacing:3px;font-weight:900}
+  header.bar p{font-size:.9rem;opacity:.9}
+
+  .opts{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:14px;box-shadow:var(--shadow)}
+  .opt{display:flex;align-items:center;gap:10px;margin:6px 0;flex-wrap:wrap}
+  .opt>b{min-width:4.5em;font-size:.95rem}
+  .seg{display:flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;flex:1;min-width:220px}
+  .seg button{flex:1;border:none;background:#FFFDF8;padding:9px 6px;font-weight:800;font-size:.95rem}
+  .seg button.on{background:var(--jade);color:#fff}
+
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  @media(max-width:560px){.cards{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px}
+  .card h2{font-size:1.2rem;letter-spacing:1px}
+  .card p{font-size:.88rem;color:var(--mute);flex:1}
+  .card .em{font-size:2rem}
+  .btn{border:2px solid var(--jade);background:#fff;color:var(--jade);border-radius:12px;padding:10px 12px;font-weight:800}
+  .btn.primary{background:var(--jade);color:#fff}
+  .btn.ghost{border-color:var(--line);color:var(--ink)}
+  .btn.danger{border-color:var(--vermilion);color:var(--vermilion)}
+  .row-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .row-btns .btn{flex:1;min-width:120px}
+  .note{margin-top:14px;font-size:.84rem;color:#6B6455;background:#F4EFE4;border-radius:12px;padding:10px 12px;line-height:1.6}
+  footer.credit{margin-top:26px;text-align:center;font-size:.8rem;color:var(--mute);line-height:1.8}
+  footer.credit a{color:var(--civic)}
+
+  /* ───── 帶操播放器（投影用） ───── */
+  #player{position:fixed;inset:0;background:#F7F2E6;z-index:40;display:flex;flex-direction:column}
+  .p-top{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--jade-deep);color:#FDF6E9}
+  .p-top .ttl{font-weight:900;letter-spacing:1px;font-size:1.05rem}
+  .p-top .time{margin-left:auto;font-variant-numeric:tabular-nums;font-size:1.05rem}
+  .p-prog{height:8px;background:#DCD3C0}
+  .p-prog i{display:block;height:100%;width:0;background:var(--gold);transition:width .4s}
+  .p-main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;padding:18px 22px;min-height:0}
+  @media(max-width:760px){.p-main{grid-template-columns:1fr;grid-template-rows:auto 1fr;padding:12px}}
+  .stage{background:#fff;border:2px solid var(--line);border-radius:22px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:220px}
+  .stage video{width:100%;height:100%;object-fit:contain;background:#000}
+  .stage svg{width:92%;height:92%;max-height:62vh}
+  .stage .tag{position:absolute;left:12px;bottom:10px;font-size:.78rem;color:var(--mute)}
+  .info{display:flex;flex-direction:column;justify-content:center;min-height:0}
+  .part{align-self:flex-start;background:var(--jade);color:#fff;border-radius:30px;padding:4px 16px;font-weight:800;letter-spacing:2px;font-size:clamp(.9rem,1.6vw,1.2rem)}
+  .part.rest{background:var(--gold)}
+  .mname{font-family:"Noto Serif TC","PMingLiU",serif;font-weight:900;font-size:clamp(2rem,5.4vw,4.4rem);letter-spacing:3px;line-height:1.2;margin-top:10px}
+  .side{display:inline-block;font-size:clamp(1.2rem,2.6vw,2.2rem);font-weight:900;color:var(--vermilion);margin-top:4px;min-height:1.3em}
+  .cue{font-size:clamp(1.1rem,2.3vw,1.9rem);line-height:1.55;margin-top:8px}
+  .counter{display:flex;align-items:baseline;gap:14px;margin-top:12px}
+  .count{font-size:clamp(4rem,12vw,9rem);font-weight:900;line-height:1;color:var(--jade-deep);font-variant-numeric:tabular-nums}
+  .count.pop{animation:pop .25s ease-out}
+  @keyframes pop{from{transform:scale(1.18)}to{transform:scale(1)}}
+  .of{font-size:clamp(1.3rem,3vw,2.4rem);color:var(--mute);font-weight:800}
+  .setinfo{font-size:clamp(1rem,1.8vw,1.4rem);color:var(--civic);font-weight:800}
+  .safe{margin-top:10px;font-size:clamp(.95rem,1.7vw,1.3rem);color:#7A4A12;background:#FFF4E8;border-radius:12px;padding:8px 12px}
+  .next{margin-top:10px;font-size:clamp(.95rem,1.6vw,1.2rem);color:var(--mute)}
+  .p-ctl{display:flex;gap:10px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:#EFE7D6;flex-wrap:wrap}
+  .p-ctl button{flex:1;min-width:88px;border:none;border-radius:14px;padding:14px 6px;font-size:1.05rem;font-weight:900;background:#fff;color:var(--ink)}
+  .p-ctl .play{background:var(--jade);color:#fff;flex:1.4}
+  .p-ctl .stop{background:#fff;color:var(--vermilion)}
+
+  /* 示意人形（側面坐姿） */
+  .fig line,.fig path{stroke:var(--jade-deep);stroke-width:7;stroke-linecap:round;fill:none}
+  .fig .head{fill:#fff;stroke:var(--jade-deep);stroke-width:6}
+  .fig .hand{fill:var(--jade-deep)}
+  .fig .chair rect,.fig .frontchair rect{fill:#D8C7A4}
+  .fig .chair line,.fig .frontchair line{stroke:#C4AF86;stroke-width:5}
+  .fig .ground{stroke:#E4D9C3;stroke-width:3}
+  .fig .frontchair{display:none}
+  .fig.stand .frontchair{display:inline}
+  .fig.stand .chair{opacity:.2}
+  .fig.stand #figP{transform:translate(4px,-42px)}
+  .fig.stand #thighP{transform:rotate(72deg)}
+  .fig.stand #shankP{transform:rotate(-72deg)}
+  .fig.stand #armP{transform:rotate(-22deg)}
+  .fig.paused *{animation-play-state:paused!important}
+  .fig{--t:1.25s}
+  .fig [class^="a-"]{animation-duration:var(--t);animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-direction:alternate}
+  .fig.hold [class^="a-"]{animation-duration:1.6s;animation-iteration-count:1;animation-fill-mode:forwards;animation-direction:normal}
+  .m-breathe .a-body{animation-name:breathe}
+  .m-neck .a-head{animation-name:neck}
+  .m-shoulder .a-arm{animation-name:shrug}
+  .m-march .a-thigh{animation-name:march}
+  .m-kneeext .a-shank{animation-name:kneeext}
+  .m-sitstand .a-fig{animation-name:rise}.m-sitstand .a-thigh{animation-name:thighdown}.m-sitstand .a-shank{animation-name:shankup}
+  .m-heel .a-fig{animation-name:heel}
+  .m-toe .a-thigh{animation-name:toe}
+  .m-armup .a-arm{animation-name:armup}
+  .m-chest .a-arm{animation-name:chest}
+  .m-grip .a-hand{animation-name:grip}
+  .m-shift .a-fig{animation-name:shift}
+  .m-twist .a-body{animation-name:twist}
+  .m-sideleg .a-thigh{animation-name:sideleg}
+  .m-kneeopen .a-thigh{animation-name:kneeopen}
+  .m-hamstr .a-shank{animation-name:kneeext}.m-hamstr .a-body{animation-name:lean}
+  .m-armstretch .a-arm{animation-name:armup}.m-armstretch .a-body{animation-name:bendback}
+  @keyframes breathe{to{transform:scale(1.05)}}
+  @keyframes neck{to{transform:scaleX(-1)}}
+  @keyframes shrug{to{transform:translateY(-8px)}}
+  @keyframes march{to{transform:rotate(-28deg)}}
+  @keyframes kneeext{to{transform:rotate(-80deg)}}
+  @keyframes rise{to{transform:translate(4px,-42px)}}
+  @keyframes thighdown{to{transform:rotate(72deg)}}
+  @keyframes shankup{to{transform:rotate(-72deg)}}
+  @keyframes heel{to{transform:translateY(-8px)}}
+  @keyframes toe{to{transform:rotate(-7deg)}}
+  @keyframes armup{to{transform:rotate(-165deg)}}
+  @keyframes chest{from{transform:rotate(-75deg)}to{transform:rotate(15deg)}}
+  @keyframes grip{from{transform:scale(.5)}to{transform:scale(1.35)}}
+  @keyframes shift{from{transform:translateX(-6px)}to{transform:translateX(6px)}}
+  @keyframes twist{to{transform:scaleX(.72)}}
+  @keyframes sideleg{to{transform:rotate(-18deg)}}
+  @keyframes kneeopen{to{transform:rotate(-9deg)}}
+  @keyframes lean{to{transform:rotate(16deg)}}
+  @keyframes bendback{to{transform:rotate(-6deg)}}
+  @media (prefers-reduced-motion: reduce){.fig [class^="a-"]{animation:none!important}.count.pop{animation:none}}
+
+  /* 對話框與表單 */
+  #dlg{position:fixed;inset:0;background:rgba(51,48,42,.45);display:none;z-index:60;align-items:flex-end;justify-content:center}
+  #dlg.on{display:flex}
+  .sheet{background:var(--paper);width:100%;max-width:820px;border-radius:22px 22px 0 0;padding:20px 18px 28px;max-height:92vh;overflow:auto}
+  .sheet h2{font-size:1.2rem;letter-spacing:2px;margin-bottom:6px}
+  .sheet p.d{font-size:.88rem;color:var(--mute);line-height:1.6;margin-bottom:6px}
+  .check{display:flex;gap:10px;align-items:flex-start;padding:9px 4px;border-bottom:1px dashed var(--line);font-size:1rem}
+  .check input{width:24px;height:24px;flex:0 0 24px;margin-top:2px}
+  label.f{display:block;font-weight:700;margin:12px 0 5px}
+  input[type=text],input[type=date],select{width:100%;border:2px solid var(--line);border-radius:12px;background:#FFFDF8;padding:11px 12px}
+  .msg{min-height:1.3em;margin-top:8px;font-size:.9rem;color:var(--civic)}
+  .msg.err{color:var(--vermilion)}
+  table.rec{width:100%;border-collapse:collapse;margin-top:10px;font-size:.92rem;background:#fff;border-radius:12px;overflow:hidden}
+  table.rec th,table.rec td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left}
+  table.rec th{background:#F2ECDF;font-size:.85rem}
+  .up{color:var(--jade);font-weight:800}.down{color:var(--amber);font-weight:800}
+  .moods{display:flex;gap:8px}
+  .moods button{flex:1;font-size:1.8rem;border:2px solid var(--line);background:#fff;border-radius:12px;padding:6px}
+  .moods button.on{border-color:var(--jade);background:#E3F2EA}
+
+  /* 季測 */
+  #testView .big{font-size:clamp(4.5rem,18vw,10rem);font-weight:900;text-align:center;line-height:1;color:var(--jade-deep);font-variant-numeric:tabular-nums}
+  #testView .clock{text-align:center;font-size:1.6rem;font-weight:900;color:var(--civic);margin-top:6px;font-variant-numeric:tabular-nums}
+  #tapBtn{width:100%;min-height:34vh;margin-top:14px;border:none;border-radius:28px;background:linear-gradient(165deg,#3A9A70,var(--jade));
+    color:#fff;font-size:2.4rem;font-weight:900;letter-spacing:4px;box-shadow:0 10px 24px rgba(46,125,91,.3)}
+  #tapBtn:disabled{opacity:.45}
+  #tapBtn:active{transform:scale(.985)}
+  .result{margin-top:12px;text-align:center;font-size:1.2rem;font-weight:800;min-height:1.6em}
+</style>
+</head>
+<body>
+
+<!-- ═════════ 首頁 ═════════ -->
+<div class="wrap" id="home">
+  <header class="bar">
+    <div class="row">
+      <div class="logo">樂動</div>
+      <div><h1>樂動 365</h1><p>據點帶操版・長輩天天動一動</p></div>
+    </div>
+  </header>
+
+  <div class="opts">
+    <div class="opt"><b>方式</b><div class="seg" id="segMode">
+      <button data-v="stand" type="button">可扶椅站立</button><button data-v="seat" type="button">全程坐姿</button></div></div>
+    <div class="opt"><b>強度</b><div class="seg" id="segLevel">
+      <button data-v="easy" type="button">輕鬆（初次參加）</button><button data-v="std" type="button">標準</button></div></div>
+    <div class="opt"><b>聲音</b><div class="seg" id="segVoice">
+      <button data-v="both" type="button">口令＋節拍</button><button data-v="voice" type="button">只有口令</button><button data-v="off" type="button">靜音</button></div></div>
+  </div>
+
+  <div class="cards">
+    <div class="card"><div class="em">🪑</div><h2>據點帶操</h2>
+      <p id="estCenter">暖身、肌力、平衡、緩和。投影到大螢幕，學生帶操員在前面示範。</p>
+      <button class="btn primary" id="goCenter" type="button">開始帶操</button></div>
+    <div class="card"><div class="em">🏠</div><h2>探訪伸展 5 分鐘</h2>
+      <p>到長輩家探訪時，一起坐著做 5 分鐘。做完可以記錄心情與需求。</p>
+      <button class="btn primary" id="goVisit" type="button">開始伸展</button></div>
+    <div class="card"><div class="em">⏱️</div><h2>30 秒坐站季測</h2>
+      <p>每季一次，看腿力有沒有進步。只和自己比，不排名。</p>
+      <button class="btn" id="goTest" type="button">開始檢測</button></div>
+    <div class="card"><div class="em">📋</div><h2>出席與紀錄</h2>
+      <p>參加名單、出席次數、季測進步、探訪紀錄，可匯出做成效統計。</p>
+      <button class="btn" id="goRec" type="button">打開紀錄</button></div>
+  </div>
+
+  <div class="note">
+    ⚠ 本工具動作以常見的長者椅子運動為主，<b>正式在據點使用前，建議請物理治療師或衛生所審核動作與次數</b>。
+    若長輩出現胸痛、頭暈、喘不過氣或關節劇痛，請立即停止並就醫。<br>
+    🎬 想換成真人示範影片：把影片命名為「動作代號.mp4」放進 <code>videos</code> 資料夾（例：videos/kneeext.mp4），播放器會自動改用影片。
+  </div>
+
+  <footer class="credit">
+    <b>樂動 365</b>｜<a href="index.html">回厝邊快報</a>｜<a href="peace.html">平安鈴</a><br>
+    正修科技大學 招生處 × 大學社會責任（USR）｜紀錄只存在這台裝置
+  </footer>
+</div>
+
+<!-- ═════════ 季測 ═════════ -->
+<div class="wrap hide" id="testView">
+  <header class="bar"><div class="row"><div class="logo">⏱️</div><div><h1>30 秒坐站</h1><p>雙手交叉抱胸，30 秒內完整站起、坐下幾次</p></div></div></header>
+  <div class="opts">
+    <label class="f" for="tWho" style="margin-top:0">誰要檢測？</label>
+    <div style="display:flex;gap:8px"><select id="tWho"></select><button class="btn" id="tAdd" type="button" style="white-space:nowrap">＋ 新增</button></div>
+    <div class="note" style="margin-top:10px">椅子靠牆放穩、旁邊一定要有人保護。做不到抱胸的長輩可以用手扶大腿，但請在備註記下，下次用同樣方式比較。</div>
+  </div>
+  <div class="big" id="tCount">0</div>
+  <div class="clock" id="tClock">30.0 秒</div>
+  <button id="tapBtn" type="button" disabled>站起來一次<br>按一下</button>
+  <div class="row-btns">
+    <button class="btn primary" id="tStart" type="button">▶ 開始（倒數 3 秒）</button>
+    <button class="btn ghost" id="tMinus" type="button">－1 修正</button>
+  </div>
+  <div class="result" id="tResult" role="status" aria-live="polite"></div>
+  <div class="row-btns"><button class="btn ghost" id="tBack" type="button">← 回首頁</button></div>
+</div>
+
+<!-- ═════════ 播放器 ═════════ -->
+<div id="player" class="hide">
+  <div class="p-top"><span class="ttl" id="pTitle">據點帶操</span><span id="pStep"></span><span class="time" id="pTime">00:00</span></div>
+  <div class="p-prog"><i id="pBar"></i></div>
+  <div class="p-main">
+    <div class="stage" id="stage">
+      <video id="vid" class="hide" playsinline muted loop></video>
+      <svg id="fig" class="fig" viewBox="0 -14 200 214" role="img" aria-label="動作示意">
+        <line class="ground" x1="20" y1="189" x2="190" y2="189"/>
+        <g class="chair"><rect x="50" y="126" width="64" height="8" rx="2"/><rect x="50" y="60" width="8" height="74" rx="2"/>
+          <line x1="55" y1="134" x2="55" y2="188"/><line x1="109" y1="134" x2="109" y2="188"/></g>
+        <g class="frontchair"><rect x="102" y="80" width="28" height="7" rx="2"/><rect x="114" y="84" width="8" height="104" rx="2"/></g>
+        <g id="figP"><g class="a-fig">
+          <g class="a-body" style="transform-origin:80px 124px">
+            <line x1="80" y1="124" x2="80" y2="74"/>
+            <g class="a-head" style="transform-origin:82px 56px"><circle class="head" cx="82" cy="56" r="13"/><line x1="94" y1="56" x2="99" y2="58" style="stroke-width:4"/></g>
+            <g id="armP" style="transform-origin:80px 78px"><g class="a-arm" style="transform-origin:80px 78px">
+              <line x1="80" y1="78" x2="96" y2="116"/>
+              <g class="a-hand" style="transform-origin:96px 117px"><circle class="hand" cx="96" cy="117" r="6"/></g>
+            </g></g>
+          </g>
+          <g id="thighP" style="transform-origin:80px 124px"><g class="a-thigh" style="transform-origin:80px 124px">
+            <line x1="80" y1="124" x2="124" y2="124"/>
+            <g id="shankP" style="transform-origin:124px 124px"><g class="a-shank" style="transform-origin:124px 124px">
+              <line x1="124" y1="124" x2="124" y2="184"/><line x1="124" y1="184" x2="139" y2="184"/>
+            </g></g>
+          </g></g>
+        </g></g>
+      </svg>
+      <span class="tag" id="stageTag">示意動畫・以帶操老師示範為準</span>
+    </div>
+    <div class="info">
+      <span class="part" id="pPart">暖身</span>
+      <div class="mname" id="pName">準備</div>
+      <span class="side" id="pSide"></span>
+      <div class="cue" id="pCue"></div>
+      <div class="counter"><span class="count" id="pCount"></span><span class="of" id="pOf"></span><span class="setinfo" id="pSet"></span></div>
+      <div class="safe" id="pSafe"></div>
+      <div class="next" id="pNext"></div>
+    </div>
+  </div>
+  <div class="p-ctl">
+    <button type="button" id="cPrev">⏮ 上一個</button>
+    <button type="button" class="play" id="cPlay">⏸ 暫停</button>
+    <button type="button" id="cNext">⏭ 下一個</button>
+    <button type="button" id="cFull">⛶ 全螢幕</button>
+    <button type="button" class="stop" id="cStop">■ 結束</button>
+  </div>
+</div>
+
+<div id="dlg"><div class="sheet" id="sheet"></div></div>
+
+<script>
+/* ══════════ 基礎 ══════════ */
+const mem={};
+const store={
+  get(k){try{return localStorage.getItem(k)??mem[k]??null;}catch(e){return mem[k]??null;}},
+  set(k,v){mem[k]=v;try{localStorage.setItem(k,v);}catch(e){}},
+  del(k){delete mem[k];try{localStorage.removeItem(k);}catch(e){}},
+  json(k,d){try{const v=this.get(k);return v?JSON.parse(v):d;}catch(e){return d;}},
+  put(k,o){this.set(k,JSON.stringify(o));}
+};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const dkey=(d=new Date())=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function download(name,text,type){const b=new Blob([text],{type});const a=document.createElement("a");a.href=URL.createObjectURL(b);
+  a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);}
+function openSheet(h){$("sheet").innerHTML=h;$("dlg").classList.add("on");$("sheet").scrollTop=0;}
+function closeSheet(){$("dlg").classList.remove("on");}
+$("dlg").onclick=e=>{if(e.target.id==="dlg"&&!R)closeSheet();};
+
+/* 設定與紀錄（mj_ 開頭，避免和同網域其他工具衝突） */
+const S=Object.assign({mode:"stand",level:"easy",sound:"both"},store.json("mj_set",{}));
+let people=store.json("mj_people",[]);     // [{id,n}]
+let tests=store.json("mj_tests",[]);       // [{pid,date,count,note}]
+let sessions=store.json("mj_sessions",[]); // [{date,prog,min,att:[pid]}]
+let visits=store.json("mj_visits",[]);     // [{date,who,mood,need,next}]
+function saveAll(){store.put("mj_set",S);store.put("mj_people",people);store.put("mj_tests",tests);store.put("mj_sessions",sessions);store.put("mj_visits",visits);}
+const pName=id=>(people.find(p=>p.id===id)||{}).n||"（已刪除）";
+
+/* ══════════ 聲音 ══════════ */
+let zhVoice=null;
+function pickVoice(){try{const vs=speechSynthesis.getVoices();zhVoice=vs.find(v=>/zh[-_]TW/i.test(v.lang))||vs.find(v=>/zh/i.test(v.lang))||null;}catch(e){}}
+if("speechSynthesis" in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+const voiceOn=()=>S.sound!=="off";
+const beepOn=()=>S.sound==="both";
+function stopSpeak(){try{speechSynthesis.cancel();}catch(e){}}
+function speakP(text,rate=.9){
+  return new Promise(res=>{
+    if(!voiceOn()||!("speechSynthesis" in window)||!text){res();return;}
+    try{stopSpeak();const u=new SpeechSynthesisUtterance(text);u.lang="zh-TW";u.rate=rate;if(zhVoice)u.voice=zhVoice;
+      let done=false;const fin=()=>{if(!done){done=true;res();}};u.onend=fin;u.onerror=fin;
+      setTimeout(fin,900+text.length*300);speechSynthesis.speak(u);}catch(e){res();}
+  });
+}
+function sayNow(t){if(!voiceOn())return;try{stopSpeak();const u=new SpeechSynthesisUtterance(t);u.lang="zh-TW";u.rate=1.05;if(zhVoice)u.voice=zhVoice;speechSynthesis.speak(u);}catch(e){}}
+let actx=null;
+function beep(f=880,ms=90){if(!beepOn())return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.value=.12;o.connect(g);g.connect(actx.destination);
+  o.start();g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+ms/1000);o.stop(actx.currentTime+ms/1000+.02);}catch(e){}}
+const CN="零一二三四五六七八九十";
+function cnum(n){if(n<=10)return CN[n];if(n<20)return "十"+(n%10?CN[n%10]:"");return CN[Math.floor(n/10)]+"十"+(n%10?CN[n%10]:"");}
+
+/* ══════════ 動作庫 ══════════
+   reps／hold 依強度；side＝左右各做；standOnly＝需站立，坐姿模式自動換成 alt */
+const M={
+  breath:{nm:"深呼吸",part:"暖身",reps:{easy:4,std:4},tempo:5,anim:"breathe",cue:"鼻子慢慢吸氣，嘴巴慢慢吐氣。",safe:"坐穩，背靠椅背。"},
+  neck:{nm:"轉頭看左右",part:"暖身",reps:{easy:4,std:6},tempo:3.2,anim:"neck",cue:"慢慢轉頭看左邊，再慢慢看右邊。",safe:"不要轉太快，頭暈就停下來。"},
+  shoulder:{nm:"聳肩轉肩",part:"暖身",reps:{easy:6,std:8},anim:"shoulder",cue:"肩膀往上提高，再往後轉、放下。",safe:"動作放慢，肩膀痛就縮小動作。"},
+  march:{nm:"坐姿踏步",part:"暖身",reps:{easy:16,std:24},tempo:1.6,anim:"march",cue:"左右腳輪流抬起來，像在原地走路，手也跟著擺。",safe:"坐在椅子前半部，腳踩穩。"},
+  sitstand:{nm:"坐站練習",part:"肌力",reps:{easy:5,std:8},sets:{easy:1,std:2},anim:"sitstand",standOnly:true,alt:"kneeup",
+    cue:"身體往前傾，腳用力站起來，站直後再慢慢坐下。",safe:"椅子靠牆，旁邊要有人照顧；需要時可用手扶椅子幫忙。"},
+  kneeup:{nm:"坐姿抬膝",part:"肌力",reps:{easy:6,std:8},sets:{easy:1,std:2},side:true,tempo:3,anim:"march",
+    cue:"一隻腳膝蓋慢慢往上抬，停一下，再慢慢放下。",safe:"背挺直，雙手可扶椅子兩側。"},
+  kneeext:{nm:"坐姿抬腿伸直",part:"肌力",reps:{easy:6,std:10},sets:{easy:1,std:2},side:true,tempo:3,anim:"kneeext",
+    cue:"一隻腳慢慢伸直抬起來，停一下，再慢慢放下。",safe:"腳伸直時不要憋氣，跟著數數呼吸。"},
+  heelraise:{nm:"扶椅踮腳尖",part:"肌力",reps:{easy:8,std:12},standOnly:true,alt:"toeseat",anim:"heel",stand:true,
+    cue:"站在椅背後面扶好，腳跟慢慢抬高，再慢慢放下。",safe:"一定要扶穩椅背。"},
+  toeseat:{nm:"坐姿抬腳跟",part:"肌力",reps:{easy:10,std:15},anim:"toe",cue:"坐著，腳尖踩地，腳跟抬起來，再放下。",safe:"坐穩。"},
+  armup:{nm:"雙手往上推",part:"肌力",reps:{easy:8,std:10},sets:{easy:1,std:2},anim:"armup",
+    cue:"雙手握拳放在肩膀，往上推高，再慢慢放下。可以拿裝水的小寶特瓶。",safe:"肩膀痛就只推到不痛的高度。"},
+  chest:{nm:"擴胸夾背",part:"肌力",reps:{easy:8,std:10},anim:"chest",cue:"雙手往前伸，手肘往後拉，背部夾緊，再放鬆。",safe:"動作放慢，不要憋氣。"},
+  grip:{nm:"握拳張開",part:"肌力",reps:{easy:10,std:15},tempo:1.8,anim:"grip",cue:"雙手用力握拳，再用力把手指張開。",safe:"手指關節痛就放輕。"},
+  shift:{nm:"扶椅重心左右移",part:"平衡",reps:{easy:6,std:10},standOnly:true,alt:"twist",anim:"shift",stand:true,
+    cue:"站在椅背後面扶好，重心慢慢移到左腳，再移到右腳。",safe:"一定要扶穩，腳不要離開地面。"},
+  twist:{nm:"坐姿左右轉身",part:"平衡",reps:{easy:6,std:8},tempo:3,anim:"twist",cue:"坐挺，雙手抱胸，身體慢慢轉向左邊，回正，再轉向右邊。",safe:"轉到舒服的角度就好。"},
+  sideleg:{nm:"扶椅側抬腿",part:"平衡",reps:{easy:6,std:8},side:true,standOnly:true,alt:"kneeopen",anim:"sideleg",stand:true,
+    cue:"扶好椅背，一隻腳慢慢往旁邊抬，再慢慢放下，身體保持直立。",safe:"扶穩，抬到小角度就好。"},
+  kneeopen:{nm:"坐姿膝蓋開合",part:"平衡",reps:{easy:8,std:12},anim:"kneeopen",cue:"坐著，雙膝慢慢打開，再慢慢合起來。",safe:"坐穩，不要彈震。"},
+  hamstr:{nm:"大腿後側伸展",part:"緩和",hold:{easy:15,std:20},side:true,anim:"hamstr",
+    cue:"坐在椅子前半部，一腳伸直、腳跟著地，身體微微往前傾，大腿後面有拉到的感覺。",safe:"拉到微緊就好，不要彈震。"},
+  armstretch:{nm:"手臂伸展",part:"緩和",hold:{easy:15,std:20},side:true,anim:"armstretch",cue:"一隻手往上伸直，身體微微側彎，停住呼吸。",safe:"保持呼吸，不要憋氣。"},
+  breath2:{nm:"深呼吸放鬆",part:"緩和",reps:{easy:4,std:4},tempo:5,anim:"breathe",cue:"慢慢吸氣，慢慢吐氣，全身放鬆。",safe:"辛苦了，慢慢來。"}
+};
+const PROG={
+  center:{nm:"據點帶操",ids:["breath","neck","shoulder","march","sitstand","kneeext","heelraise","armup","chest","grip","shift","sideleg","hamstr","armstretch","breath2"]},
+  visit:{nm:"探訪伸展",ids:["breath","shoulder","march","kneeext","grip","armstretch"],seat:true,level:"easy"}
+};
+function buildList(key){
+  const p=PROG[key],seat=p.seat||S.mode==="seat";
+  return p.ids.map(id=>{let m=M[id];let rid=id;if(seat&&m.standOnly){rid=m.alt;m=M[rid];}return Object.assign({id:rid},m);});
+}
+function lvl(key){return PROG[key].level||S.level;}
+function tempoOf(m,L){return m.tempo||(L==="easy"?3:2.5);}
+function estimate(key){
+  const L=lvl(key),rest=L==="easy"?20:15;let s=0;
+  buildList(key).forEach((m,i,a)=>{const sides=m.side?2:1,sets=(m.sets||{})[L]||1;
+    s+=8+(m.hold?m.hold[L]*sides+4:m.reps[L]*tempoOf(m,L)*sides*sets)+(sets-1)*10+(i<a.length-1?rest:0);});
+  return Math.round(s/60);
+}
+
+/* ══════════ 首頁 ══════════ */
+function segInit(id,key){const seg=$(id);seg.querySelectorAll("button").forEach(b=>{
+  b.classList.toggle("on",S[key]===b.dataset.v);
+  b.onclick=()=>{S[key]=b.dataset.v;saveAll();segInit(id,key);paintHome();};});}
+function paintHome(){
+  $("estCenter").textContent=`暖身、肌力、平衡、緩和，約 ${estimate("center")} 分鐘。投影到大螢幕，學生帶操員在前面示範。`
+    +(S.mode==="seat"?"（全程坐姿）":"（含扶椅站立動作）");
+}
+segInit("segMode","mode");segInit("segLevel","level");segInit("segVoice","sound");paintHome();
+
+function safetyCheck(key){
+  const items=key==="visit"
+    ?["長輩坐在穩固、有椅背的椅子上","今天身體沒有不舒服（頭暈、胸悶、發燒）","有喝水，沒有空腹"]
+    :["椅子靠牆放穩、不會滑動","長輩穿防滑的鞋子或赤腳，不穿拖鞋","今天身體沒有不舒服（頭暈、胸悶、發燒）","旁邊有志工可以照顧需要協助的長輩","提醒大家：量力而為、不要憋氣，不舒服就停"];
+  openSheet(`<h2>🛡️ 開始前確認</h2><p class="d">每一項都確認後再開始。</p>
+    ${items.map((t,i)=>`<label class="check"><input type="checkbox" class="sc"> <span>${t}</span></label>`).join("")}
+    <div class="msg" id="scMsg"></div>
+    <div class="row-btns"><button class="btn primary" id="scGo" type="button">都確認了，開始</button><button class="btn ghost" id="scNo" type="button">取消</button></div>`);
+  $("scNo").onclick=closeSheet;
+  $("scGo").onclick=()=>{if([...document.querySelectorAll(".sc")].some(c=>!c.checked)){$("scMsg").className="msg err";$("scMsg").textContent="還有項目沒勾選。";return;}
+    closeSheet();startProgram(key);};
+}
+$("goCenter").onclick=()=>safetyCheck("center");
+$("goVisit").onclick=()=>safetyCheck("visit");
+
+/* ══════════ 播放引擎 ══════════ */
+let R=null,wakeLock=null;
+async function keepAwake(on){try{if(on&&navigator.wakeLock)wakeLock=await navigator.wakeLock.request("screen");else if(wakeLock){await wakeLock.release();wakeLock=null;}}catch(e){}}
+document.addEventListener("visibilitychange",()=>{if(R&&document.visibilityState==="visible")keepAwake(true);});
+function wait(ms){return new Promise(async res=>{let t=0;while(t<ms){if(!R||R.stop||R.jump)return res(false);
+  await new Promise(r=>setTimeout(r,100));if(R&&!R.paused)t+=100;}res(true);});}
+const halted=()=>!R||R.stop||R.jump;
+async function waitWhilePaused(){while(R&&R.paused&&!R.stop&&!R.jump)await new Promise(r=>setTimeout(r,120));}
+
+function setFig(m,L){
+  const f=$("fig");
+  f.setAttribute("class","fig m-"+m.anim+(m.hold?" hold":"")+(m.stand?" stand":"")+(R&&R.paused?" paused":""));
+  f.style.setProperty("--t",(tempoOf(m,L)/2)+"s");
+  /* 真人影片：videos/<動作代號>.mp4 存在就改用影片 */
+  const v=$("vid");v.classList.add("hide");f.classList.remove("hide");$("stageTag").classList.remove("hide");
+  v.onloadeddata=()=>{v.classList.remove("hide");f.classList.add("hide");$("stageTag").classList.add("hide");v.play().catch(()=>{});};
+  v.onerror=()=>{v.classList.add("hide");f.classList.remove("hide");};
+  v.src="videos/"+m.id+".mp4";
+}
+function paint(o){
+  if(o.part!==undefined){$("pPart").textContent=o.part;$("pPart").classList.toggle("rest",o.part==="休息");}
+  if(o.name!==undefined)$("pName").textContent=o.name;
+  if(o.side!==undefined)$("pSide").textContent=o.side;
+  if(o.cue!==undefined)$("pCue").textContent=o.cue;
+  if(o.count!==undefined){const c=$("pCount");c.textContent=o.count;c.classList.remove("pop");void c.offsetWidth;if(o.count!=="")c.classList.add("pop");}
+  if(o.of!==undefined)$("pOf").textContent=o.of;
+  if(o.set!==undefined)$("pSet").textContent=o.set;
+  if(o.safe!==undefined){$("pSafe").textContent=o.safe?"⚠ "+o.safe:"";$("pSafe").classList.toggle("hide",!o.safe);}
+  if(o.next!==undefined)$("pNext").textContent=o.next;
+}
+function tick(){if(!R)return;const s=Math.floor((R.elapsed)/1000);$("pTime").textContent=pad(Math.floor(s/60))+":"+pad(s%60)+" ／ 約 "+R.est+" 分";
+  $("pStep").textContent="第 "+(R.idx+1)+" / "+R.list.length+" 個動作";$("pBar").style.width=((R.idx)/R.list.length*100)+"%";}
+
+async function startProgram(key){
+  const L=lvl(key);
+  R={key,L,list:buildList(key),idx:0,paused:false,stop:false,jump:0,elapsed:0,est:estimate(key),started:Date.now()};
+  $("home").classList.add("hide");$("player").classList.remove("hide");
+  $("pTitle").textContent=PROG[key].nm+"｜"+(L==="easy"?"輕鬆":"標準")+((PROG[key].seat||S.mode==="seat")?"・坐姿":"");
+  $("cPlay").textContent="⏸ 暫停";
+  keepAwake(true);
+  R.timer=setInterval(()=>{if(R&&!R.paused)R.elapsed+=500;tick();},500);
+  paint({part:"準備",name:PROG[key].nm,side:"",cue:"大家坐好，我們準備開始。",count:"",of:"",set:"",safe:"",next:"第一個：" + R.list[0].nm});
+  setFig(R.list[0],L);
+  await speakP("大家好，我們準備開始"+PROG[key].nm+"。坐好，背挺直。");
+  await wait(1500);
+  while(R&&!R.stop&&R.idx<R.list.length){
+    R.jump=0;tick();
+    await doMove(R.list[R.idx]);
+    if(!R||R.stop)break;
+    if(R.jump===-1){R.idx=Math.max(0,R.idx-1);continue;}
+    if(R.jump===1){R.idx++;continue;}
+    if(R.idx<R.list.length-1){
+      await restPhase(R.list[R.idx+1]);
+      if(!R||R.stop)break;
+      if(R.jump===-1){R.jump=0;continue;}   /* 休息中按「上一個」＝重做剛才的動作 */
+    }
+    R.idx++;
+  }
+  if(R&&!R.stop)finish(true);
+}
+async function doMove(m){
+  const L=R.L,sides=m.side?["左邊","右邊"]:[null],sets=(m.sets||{})[L]||1;
+  const next=R.list[R.idx+1];
+  setFig(m,L);
+  paint({part:m.part,name:m.nm,side:"",cue:m.cue,count:"",of:"",set:"",safe:m.safe,next:next?"下一個："+next.nm:"最後一個動作"});
+  await speakP(m.nm+"。"+m.cue+(m.safe?"注意，"+m.safe:""));
+  if(halted())return;await waitWhilePaused();if(!(await wait(voiceOn()?600:4000)))return;
+  for(let s=1;s<=sets;s++){
+    for(const side of sides){
+      paint({side:side?("👉 "+side):"",set:sets>1?("第 "+s+" / "+sets+" 組"):""});
+      if(side){await speakP((side==="左邊"&&s===1?"先做":"換")+side);if(halted())return;}
+      if(m.hold){
+        const H=m.hold[L];await speakP("開始，停住，保持呼吸");if(halted())return;
+        for(let t=H;t>0;t--){paint({count:t,of:"秒"});if(t<=3)beep(660);if(!(await wait(1000)))return;await waitWhilePaused();}
+        paint({count:"✓",of:""});await speakP("放鬆");if(halted())return;
+      }else{
+        const N=m.reps[L],T=tempoOf(m,L)*1000;
+        for(let i=1;i<=N;i++){await waitWhilePaused();if(halted())return;
+          paint({count:i,of:"／ "+N});beep(i===N?1100:880);sayNow(cnum(i));
+          if(!(await wait(T)))return;}
+      }
+    }
+    if(s<sets){paint({part:"休息",side:"",count:10,of:"秒",set:"第 "+(s+1)+" 組準備"});await speakP("休息一下，準備第"+cnum(s+1)+"組");
+      for(let t=10;t>0;t--){paint({count:t});if(!(await wait(1000)))return;}
+      paint({part:m.part});}
+  }
+}
+async function restPhase(nx){
+  const rest=R.L==="easy"?20:15;
+  setFig(nx,R.L);$("fig").classList.add("paused");
+  paint({part:"休息",name:"休息一下",side:"",cue:"喝口水、慢慢呼吸。",of:"秒",set:"",safe:"",next:"下一個："+nx.nm});
+  sayNow("很好。休息一下，下一個，"+nx.nm);
+  for(let t=rest;t>0;t--){paint({count:t});if(t<=3)beep(660);if(!(await wait(1000)))return;}
+}
+function finish(done){
+  const r=R;if(!r)return;
+  clearInterval(r.timer);r.stop=true;stopSpeak();keepAwake(false);
+  const v=$("vid");try{v.pause();v.removeAttribute("src");v.load();}catch(e){}
+  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+  const min=Math.max(1,Math.round(r.elapsed/60000));
+  R=null;$("player").classList.add("hide");$("home").classList.remove("hide");
+  if(done)speakP("今天的運動完成了，大家辛苦了，記得喝水。");
+  if(r.key==="center")attendance(min,done,r.idx+(done?0:0),r.list.length);else visitForm(min,done);
+}
+$("cPlay").onclick=()=>{if(!R)return;R.paused=!R.paused;$("cPlay").textContent=R.paused?"▶ 繼續":"⏸ 暫停";
+  $("fig").classList.toggle("paused",R.paused);const v=$("vid");if(R.paused){stopSpeak();try{v.pause();}catch(e){}}else if(!v.classList.contains("hide")){v.play().catch(()=>{});}};
+$("cNext").onclick=()=>{if(R){R.jump=1;R.paused=false;$("cPlay").textContent="⏸ 暫停";stopSpeak();}};
+$("cPrev").onclick=()=>{if(R){R.jump=-1;R.paused=false;$("cPlay").textContent="⏸ 暫停";stopSpeak();}};
+$("cStop").onclick=()=>{if(!R)return;
+  if($("cStop").dataset.armed){delete $("cStop").dataset.armed;$("cStop").textContent="■ 結束";finish(false);return;}
+  $("cStop").dataset.armed="1";$("cStop").textContent="再按一次結束";
+  setTimeout(()=>{const b=$("cStop");if(b){delete b.dataset.armed;b.textContent="■ 結束";}},3000);};
+$("cFull").onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else $("player").requestFullscreen();}catch(e){}};
+document.addEventListener("keydown",e=>{if(!R)return;if(e.code==="Space"){e.preventDefault();$("cPlay").click();}
+  if(e.code==="ArrowRight")$("cNext").click();if(e.code==="ArrowLeft")$("cPrev").click();});
+
+/* ══════════ 出席（據點帶操結束） ══════════ */
+function peopleChecks(sel){return people.map(p=>`<label class="check"><input type="checkbox" class="att" value="${p.id}" ${sel&&sel.includes(p.id)?"checked":""}> <span>${esc(p.n)}</span></label>`).join("")||`<p class="d">還沒有名單，可在下面新增。</p>`;}
+function attendance(min,done,idx,total){
+  openSheet(`<h2>${done?"🎉 今天完成了！":"今天先做到這裡"}</h2>
+    <p class="d">共 ${min} 分鐘。請勾選今天有參加的長輩（出席次數會做成 USR 成效統計，只記稱呼）。</p>
+    <div id="attList">${peopleChecks()}</div>
+    <div style="display:flex;gap:8px;margin-top:10px"><input type="text" id="attNew" maxlength="12" placeholder="新增稱呼，例：陳阿嬤"><button class="btn" id="attAdd" type="button" style="white-space:nowrap">＋ 加入</button></div>
+    <div class="msg" id="attMsg"></div>
+    <div class="row-btns"><button class="btn primary" id="attSave" type="button">記錄出席</button><button class="btn ghost" id="attSkip" type="button">這次不記錄</button></div>`);
+  $("attAdd").onclick=()=>{const n=$("attNew").value.trim();if(!n)return;const p={id:uid(),n};people.push(p);saveAll();
+    const sel=[...document.querySelectorAll(".att:checked")].map(c=>c.value).concat(p.id);$("attList").innerHTML=peopleChecks(sel);$("attNew").value="";};
+  $("attSkip").onclick=closeSheet;
+  $("attSave").onclick=()=>{const att=[...document.querySelectorAll(".att:checked")].map(c=>c.value);
+    sessions.push({date:dkey(),prog:"據點帶操",min,att,mode:S.mode,level:S.level});saveAll();
+    $("attMsg").textContent="✅ 已記錄 "+att.length+" 位長輩出席。";setTimeout(closeSheet,900);};
+}
+/* ══════════ 探訪紀錄（探訪伸展結束） ══════════ */
+function visitForm(min,done){
+  let mood="";
+  openSheet(`<h2>${done?"🎉 伸展完成！":"今天先做到這裡"}</h2>
+    <p class="d">記錄這次探訪（選填）。不要寫病歷或身分證等資料；需要里長處理的事，請同時告訴里長。</p>
+    <label class="f" for="vWho">長輩稱呼</label><input type="text" id="vWho" maxlength="12" placeholder="例：王阿嬤">
+    <label class="f">今天心情</label><div class="moods" id="vMood">${["😀","🙂","😐","😟"].map(m=>`<button type="button" data-m="${m}">${m}</button>`).join("")}</div>
+    <label class="f" for="vNeed">需要什麼幫忙</label><input type="text" id="vNeed" maxlength="40" placeholder="例：浴室燈泡壞了、想學用手機叫車">
+    <label class="f" for="vNext">下次探訪</label><input type="date" id="vNext">
+    <div class="row-btns"><button class="btn primary" id="vSave" type="button">儲存探訪紀錄</button><button class="btn ghost" id="vSkip" type="button">不記錄</button></div>`);
+  document.querySelectorAll("#vMood button").forEach(b=>b.onclick=()=>{mood=b.dataset.m;document.querySelectorAll("#vMood button").forEach(x=>x.classList.toggle("on",x===b));});
+  $("vSkip").onclick=closeSheet;
+  $("vSave").onclick=()=>{visits.push({date:dkey(),who:$("vWho").value.trim(),mood,need:$("vNeed").value.trim(),next:$("vNext").value,min});saveAll();closeSheet();};
+}
+
+/* ══════════ 30 秒坐站 ══════════ */
+let T=null;
+function fillWho(sel){$("tWho").innerHTML=people.length?people.map(p=>`<option value="${p.id}" ${p.id===sel?"selected":""}>${esc(p.n)}</option>`).join(""):`<option value="">請先按「＋ 新增」</option>`;}
+$("goTest").onclick=()=>{$("home").classList.add("hide");$("testView").classList.remove("hide");fillWho();resetTest();};
+$("tBack").onclick=()=>{stopTest(false);$("testView").classList.add("hide");$("home").classList.remove("hide");};
+$("tAdd").onclick=()=>{openSheet(`<h2>＋ 新增長輩</h2><label class="f" for="nN">稱呼</label><input type="text" id="nN" maxlength="12" placeholder="例：陳阿公">
+  <div class="row-btns"><button class="btn primary" id="nOk" type="button">加入</button><button class="btn ghost" onclick="closeSheet()" type="button">取消</button></div>`);
+  $("nN").focus();$("nOk").onclick=()=>{const n=$("nN").value.trim();if(!n)return;const p={id:uid(),n};people.push(p);saveAll();fillWho(p.id);closeSheet();};};
+function resetTest(){T=null;$("tCount").textContent="0";$("tClock").textContent="30.0 秒";$("tapBtn").disabled=true;$("tStart").disabled=false;$("tResult").textContent="";}
+function stopTest(){if(T&&T.iv)clearInterval(T.iv);if(T)T.run=false;$("tapBtn").disabled=true;}
+$("tStart").onclick=async()=>{
+  const pid=$("tWho").value;if(!pid){$("tResult").textContent="請先新增並選擇要檢測的長輩。";return;}
+  resetTest();$("tStart").disabled=true;T={pid,count:0,run:false};
+  for(const n of ["三","二","一"]){$("tClock").textContent="預備 "+n;beep(660,120);sayNow(n);await new Promise(r=>setTimeout(r,1000));if(!T)return;}
+  T.run=true;T.t0=performance.now();$("tapBtn").disabled=false;beep(1100,200);sayNow("開始");
+  T.iv=setInterval(()=>{const left=Math.max(0,30-(performance.now()-T.t0)/1000);$("tClock").textContent=left.toFixed(1)+" 秒";
+    if(left<=0){stopTest();beep(1100,400);sayNow("停");saveTest();}},100);
+};
+$("tapBtn").onclick=()=>{if(!T||!T.run)return;T.count++;$("tCount").textContent=T.count;beep(880,60);};
+$("tMinus").onclick=()=>{if(!T)return;T.count=Math.max(0,T.count-1);$("tCount").textContent=T.count;
+  if(!T.run&&T.saved){const last=tests[tests.length-1];if(last&&last.pid===T.pid){last.count=T.count;saveAll();showTestResult();}}};
+function saveTest(){
+  tests.push({pid:T.pid,date:dkey(),count:T.count});saveAll();T.saved=true;$("tStart").disabled=false;$("tStart").textContent="▶ 下一位／再測一次";showTestResult();
+}
+function showTestResult(){
+  const mine=tests.filter(t=>t.pid===T.pid);const cur=mine[mine.length-1],prev=mine[mine.length-2];
+  let msg=`${pName(T.pid)}：這次 ${cur.count} 次。`;
+  if(prev){const d=cur.count-prev.count;msg+=d>0?`比上次（${prev.date}）多 ${d} 次，進步了！👍`:d===0?`和上次一樣，維持得很好。`:`比上次少 ${-d} 次，最近可以多練坐站。`;}
+  else msg+="這是第一次紀錄，下一季再來比比看。";
+  $("tResult").textContent=msg+"（按「－1 修正」可更正次數）";
+}
+
+/* ══════════ 紀錄 ══════════ */
+$("goRec").onclick=()=>{
+  const cnt={};sessions.forEach(s=>s.att.forEach(id=>cnt[id]=(cnt[id]||0)+1));
+  const rows=people.map(p=>{const mine=tests.filter(t=>t.pid===p.id);const c=mine[mine.length-1],pv=mine[mine.length-2];
+    let tr="—";if(c){tr=c.count+" 次（"+c.date.slice(5)+"）";if(pv){const d=c.count-pv.count;tr+=` <span class="${d>=0?"up":"down"}">${d>=0?"+":""}${d}</span>`;}}
+    return `<tr><td>${esc(p.n)}</td><td>${cnt[p.id]||0}</td><td>${tr}</td></tr>`;}).join("");
+  const ym=dkey().slice(0,7),mSess=sessions.filter(s=>s.date.startsWith(ym));
+  openSheet(`<h2>📋 出席與紀錄</h2>
+    <p class="d">本月帶操 <b>${mSess.length}</b> 場、出席 <b>${mSess.reduce((a,s)=>a+s.att.length,0)}</b> 人次；累計探訪 <b>${visits.length}</b> 次。季測只顯示個人前後比較，不排名。</p>
+    <table class="rec"><tr><th>稱呼</th><th>出席次數</th><th>最近 30 秒坐站</th></tr>${rows||`<tr><td colspan="3">還沒有資料</td></tr>`}</table>
+    <div class="row-btns"><button class="btn primary" id="rCsv" type="button">⬇️ 匯出紀錄（Excel 可開）</button></div>
+    <p class="d" style="margin-top:12px">換裝置或交接給下一位帶操員：</p>
+    <div class="row-btns"><button class="btn" id="rBak" type="button">💾 下載備份檔</button><button class="btn" id="rRes" type="button">📂 從備份還原</button>
+      <input type="file" id="rFile" accept=".json,application/json" class="hide"></div>
+    <div class="row-btns"><button class="btn danger" id="rClr" type="button">🧹 清除這台裝置的紀錄</button></div>
+    <div class="msg" id="rMsg"></div>
+    <div class="row-btns"><button class="btn ghost" onclick="closeSheet()" type="button">關閉</button></div>`);
+  $("rCsv").onclick=()=>{
+    const out=[["類型","日期","稱呼","內容","補充1","補充2"]];
+    sessions.forEach(s=>s.att.forEach(id=>out.push(["出席",s.date,pName(id),s.prog,s.min+" 分鐘",(s.mode==="seat"?"坐姿":"含站立")+"・"+(s.level==="easy"?"輕鬆":"標準")])));
+    tests.forEach(t=>out.push(["30秒坐站",t.date,pName(t.pid),t.count+" 次","",""]));
+    visits.forEach(v=>out.push(["探訪",v.date,v.who,v.mood,v.need,v.next?"下次 "+v.next:""]));
+    const csv="\ufeff"+out.map(r=>r.map(c=>'"'+String(c??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
+    download("樂動365紀錄_"+dkey()+".csv",csv,"text/csv");$("rMsg").textContent="✅ 已匯出。";};
+  $("rBak").onclick=()=>{download("樂動365備份_"+dkey()+".json",JSON.stringify({app:"movejoy-center",v:1,people,tests,sessions,visits},null,1),"application/json");$("rMsg").textContent="✅ 備份檔已下載。";};
+  $("rRes").onclick=()=>$("rFile").click();
+  $("rFile").onchange=ev=>{const f=ev.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(o.app!=="movejoy-center")throw 0;
+    people=o.people||[];tests=o.tests||[];sessions=o.sessions||[];visits=o.visits||[];saveAll();$("rMsg").className="msg";$("rMsg").textContent="✅ 已還原。重新打開紀錄即可看到。";}
+    catch(e){$("rMsg").className="msg err";$("rMsg").textContent="這個檔案不是樂動 365 的備份檔。";}};rd.readAsText(f);ev.target.value="";};
+  let armed=false;$("rClr").onclick=()=>{if(!armed){armed=true;$("rClr").textContent="⚠ 再按一次，確定清除";return;}
+    people=[];tests=[];sessions=[];visits=[];saveAll();$("rMsg").textContent="✅ 已清除。";};
+};
+</script>
+</body>
+</html>
