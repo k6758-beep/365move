@@ -6,5 +6,5 @@
 window.PEACE_CONFIG = {
   url: "https://khihtobjgarnrjgapytr.supabase.co",
   key: "sb_publishable_ufrwdXEDOVtw_yoGb09uig_VtqgYLzY",
-  vapidPublicKey: ""
+  vapidPublicKey: "BHYBe6dwXHESslESnN4t88IMwnDWDfaYIynlC4wB5JxIb04x0jukZHbaCuuHNa8zVr7vbAHJ3qGaJnTsWr7yWYc"
 };
