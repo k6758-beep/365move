@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>平安鈴</title>
+<meta name="theme-color" content="#2E7D5B">
+<meta name="robots" content="noindex">
+<link rel="apple-touch-icon" id="touchIcon" href="">
+<style>
+  :root{
+    --paper:#FBF5E9;--ink:#33302A;--civic:#1F5F73;--jade:#2E7D5B;--jade-deep:#23664A;
+    --help:#D2691E;--vermilion:#B5372A;--line:#E4D9C3;--mute:#7A7364;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{font-size:17px}
+  body{font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;background:var(--paper);color:var(--ink);
+    line-height:1.6;min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  button{font-family:inherit;color:inherit;cursor:pointer}
+  button:focus-visible,a:focus-visible{outline:4px solid #A8781F;outline-offset:3px}
+  .hide{display:none!important}
+  main{min-height:100vh;display:flex;flex-direction:column;padding:18px 16px 22px;max-width:560px;margin:0 auto}
+
+  .preview{background:#A8781F;color:#fff;border-radius:10px;padding:6px 12px;font-size:.9rem;margin-bottom:10px;text-align:center}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .hello{font-family:"Noto Serif TC","PMingLiU",serif;font-size:2.3rem;font-weight:900;letter-spacing:2px;line-height:1.25}
+  .date{font-size:1.35rem;margin-top:4px;color:var(--civic);font-weight:700}
+  .speak{background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 10px;font-size:1rem;font-weight:800;white-space:nowrap}
+
+  /* 大按鈕：未按 → 傳送中 → 已收到 */
+  #okBtn{margin-top:16px;flex:1 1 auto;min-height:38vh;border:none;border-radius:32px;color:#fff;
+    background:linear-gradient(165deg,#3A9A70,var(--jade));box-shadow:0 12px 28px rgba(46,125,91,.35);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:18px;transition:transform .12s}
+  #okBtn:active{transform:scale(.98)}
+  #okBtn .big{font-size:4.4rem;line-height:1}
+  #okBtn .t{font-size:2.2rem;font-weight:900;letter-spacing:3px;line-height:1.3;text-align:center}
+  #okBtn .s{font-size:1.15rem;opacity:.95}
+  #okBtn.sending{background:linear-gradient(165deg,#7FA997,#5E8C77)}
+  #okBtn.done{background:#fff;color:var(--jade-deep);border:4px solid var(--jade);box-shadow:none}
+  #okBtn.done .t{font-size:1.75rem;letter-spacing:1px}
+  #okBtn.done .s{font-size:2.3rem;font-weight:900;opacity:1;letter-spacing:1px}
+  #okBtn.pending{background:#fff;color:#8A6A12;border:4px dashed #C9A227;box-shadow:none}
+  #okBtn.pending .t{font-size:1.6rem;letter-spacing:1px}
+  #okBtn.pending .s{font-size:1.1rem}
+  @keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+  #okBtn.done .big{animation:pop .45s ease-out}
+
+  .streak{margin-top:12px;text-align:center;font-size:1.1rem;min-height:1.6em}
+  .streak b{color:var(--jade);font-size:1.35rem}
+
+  .note{margin-top:12px;border-radius:16px;padding:12px 14px;font-size:1.15rem;line-height:1.6;font-weight:700}
+  .note.help{background:#FCEBDD;color:#8A4210;border:2px solid #EFC39E}
+  .note.warn{background:#FFF4E0;color:#7A5A10}
+
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .ebtn{border:none;border-radius:20px;padding:18px 8px;font-size:1.35rem;font-weight:900;color:#fff;
+    display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;text-align:center}
+  .ebtn small{font-size:.95rem;font-weight:600;opacity:.95}
+  .e-help{background:var(--help)}
+  .e-call{background:var(--civic)}
+  .e-119{background:var(--vermilion);margin-top:12px;width:100%;flex-direction:row;justify-content:center;gap:10px;font-size:1.3rem}
+  .foot{margin-top:14px;text-align:center;font-size:.85rem;color:var(--mute)}
+
+  .setup{background:#E7F1F4;border-radius:14px;padding:12px 14px;margin-top:12px;font-size:1rem;line-height:1.7}
+  .setup b{color:var(--civic)}
+
+  .center{margin:auto 0;text-align:center;padding:30px 10px}
+  .center .big{font-size:3.4rem}
+  .center h1{font-size:1.6rem;margin:10px 0}
+  .center p{font-size:1.15rem;color:var(--mute)}
+
+  /* 確認視窗 */
+  #dlg{position:fixed;inset:0;background:rgba(51,48,42,.5);display:none;z-index:50;align-items:flex-end;justify-content:center}
+  #dlg.on{display:flex}
+  .sheet{background:var(--paper);width:100%;max-width:560px;border-radius:24px 24px 0 0;padding:24px 18px calc(24px + env(safe-area-inset-bottom))}
+  .sheet h2{font-size:1.6rem;text-align:center;margin-bottom:16px;line-height:1.4}
+  .sheet button{width:100%;border:none;border-radius:18px;padding:18px;font-size:1.35rem;font-weight:900;margin-top:10px}
+  .sheet .yes{background:var(--help);color:#fff}
+  .sheet .no{background:#fff;border:2px solid var(--line)}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main id="app">
+  <div class="center" id="loading"><div class="big">🔔</div><p>正在打開平安鈴…</p></div>
+
+  <div id="bad" class="center hide">
+    <div class="big">🔗</div>
+    <h1>這個平安鈴連結無法使用</h1>
+    <p id="badTxt">請聯絡志工，拿新的專屬連結。</p>
+  </div>
+
+  <section id="elder" class="hide" style="display:flex;flex-direction:column;flex:1">
+    <div class="preview hide" id="preview">👁 預覽模式：按鈕不會真的送出</div>
+    <div class="top">
+      <div>
+        <div class="hello" id="hello"></div>
+        <div class="date" id="date"></div>
+      </div>
+      <button class="speak" id="speakBtn" type="button">🔊 唸給我聽</button>
+    </div>
+    <div class="setup hide" id="setup">👋 設定完成！請把這一頁<b>加入主畫面</b>：<br>
+      iPhone：下方「分享」→「加入主畫面」<br>Android：右上「⋮」→「加到主畫面」</div>
+
+    <button id="okBtn" type="button" aria-live="polite">
+      <span class="big" id="okIcon" aria-hidden="true">✅</span>
+      <span class="t" id="okTitle">我今天平安</span>
+      <span class="s" id="okSub">按一下，志工就會收到</span>
+    </button>
+    <div class="streak" id="streak"></div>
+    <div class="note hide" id="note" role="status"></div>
+
+    <div class="row">
+      <button class="ebtn e-help" id="helpBtn" type="button">🙋 我需要幫忙<small>請志工打給我</small></button>
+      <a class="ebtn e-call" id="callVol" href="#">📞 打給志工<small id="volName">志工</small></a>
+    </div>
+    <a class="ebtn e-119" href="tel:119">🚑 緊急狀況　撥 119</a>
+    <div class="foot" id="foot"></div>
+  </section>
+</main>
+
+<div id="dlg"><div class="sheet">
+  <h2>要請志工<br>打電話給您嗎？</h2>
+  <button class="yes" id="helpYes" type="button">🙋 是，請志工打給我</button>
+  <button class="no" id="helpNo" type="button">按錯了，不用</button>
+</div></div>
+
+<script src="config.js"></script>
+<script>
+"use strict";
+const CFG = window.PEACE_CONFIG || {};
+const $ = id => document.getElementById(id);
+const WEEK = "日一二三四五六";
+const pad = n => String(n).padStart(2, "0");
+const dkey = (d = new Date()) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+const hm = (d = new Date()) => pad(d.getHours()) + ":" + pad(d.getMinutes());
+
+/* ── 問候與日期：畫面與語音都用「9月26日 星期六」 ── */
+function greet(h = new Date().getHours()) { return h < 11 ? "早安" : h < 18 ? "午安" : "晚安"; }
+function dateText(d = new Date()) { return (d.getMonth() + 1) + "月" + d.getDate() + "日 星期" + WEEK[d.getDay()]; }
+function spokenDate(d = new Date()) { return (d.getMonth() + 1) + "月" + d.getDate() + "日，星期" + WEEK[d.getDay()]; }
+/* "08:23" → 「早上8點23分」；"10:00" → 「早上10點」 */
+function spokenTime(t) {
+  const m = String(t || "").match(/(\d{1,2}):(\d{2})/); if (!m) return "";
+  let h = +m[1]; const mi = +m[2];
+  const part = h < 5 ? "凌晨" : h < 12 ? "早上" : h === 12 ? "中午" : h < 18 ? "下午" : "晚上";
+  if (h > 12) h -= 12;
+  return part + h + "點" + (mi ? mi + "分" : "");
+}
+
+/* ── 語音 ── */
+let zhVoice = null;
+function pickVoice() { try { const vs = speechSynthesis.getVoices();
+  zhVoice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh/i.test(v.lang)) || null; } catch (e) {} }
+if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function say(t) { try { if (!("speechSynthesis" in window)) return; speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(t); u.lang = "zh-TW"; u.rate = .85; if (zhVoice) u.voice = zhVoice;
+  speechSynthesis.speak(u); } catch (e) {} }
+
+/* ── 本機暫存（只存代碼與尚未送出的回報）── */
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+
+/* ── 呼叫後端（不需要任何函式庫）── */
+async function rpc(fn, args) {
+  const r = await fetch(CFG.url.replace(/\/$/, "") + "/rest/v1/rpc/" + fn, {
+    method: "POST",
+    headers: { "apikey": CFG.key, "Content-Type": "application/json" },
+    body: JSON.stringify(args)
+  });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r.json();
+}
+
+/* ── 狀態 ── */
+let TOKEN = "", PREVIEW = false, INFO = null;
+let state = { okAt: null, pendingAt: null, helpAt: null, streak: 0 };
+
+function parseHash() {
+  const h = location.hash || "";
+  const m = h.match(/id=([A-Za-z0-9]{6,16})/);
+  PREVIEW = /preview/.test(h);
+  return m ? m[1].toUpperCase() : "";
+}
+
+function paint() {
+  const b = $("okBtn");
+  b.classList.remove("sending", "done", "pending");
+  if (state.okAt) {
+    b.classList.add("done");
+    $("okIcon").textContent = "✅";
+    $("okTitle").textContent = "已收到今日平安回報";
+    $("okSub").textContent = state.okAt + " 已完成";
+  } else if (state.pendingAt) {
+    b.classList.add("pending");
+    $("okIcon").textContent = "⏳";
+    $("okTitle").textContent = "已記下 " + state.pendingAt;
+    $("okSub").textContent = "訊號不好，連上網路會自動送出";
+  } else {
+    $("okIcon").textContent = "✅";
+    $("okTitle").textContent = "我今天平安";
+    $("okSub").textContent = "請在 " + (INFO ? INFO.deadline : "10:00") + " 前按一下";
+  }
+  if (state.okAt) $("setup").classList.add("hide");
+  $("streak").innerHTML = state.streak > 1 ? `已經連續平安 <b>${state.streak}</b> 天，真好！` : "";
+  const n = $("note");
+  if (state.helpAt) {
+    n.className = "note help";
+    n.textContent = `🟠 ${state.helpAt} 已通知${INFO.vol_name}，會盡快打給您。等不及可以直接按「打給志工」。`;
+  } else n.className = "note hide";
+}
+
+/* ── 我今天平安 ── */
+async function sendOk(auto) {
+  if (state.okAt) { if (!auto) say("今天已經回報過了，" + spokenTime(state.okAt) + "完成。謝謝您。"); return; }
+  if (PREVIEW) {
+    state.okAt = hm(); paint(); say("預覽：長輩按下後，畫面會顯示已收到今日平安回報。"); return;
+  }
+  const pend = JSON.parse(store.get("pb2_pending") || "null");
+  const at = pend && pend.day === dkey() ? pend.at : new Date().toISOString();
+  if (!pend || pend.day !== dkey()) store.set("pb2_pending", JSON.stringify({ token: TOKEN, day: dkey(), at }));
+  if (!auto) { const b = $("okBtn"); b.classList.add("sending"); $("okTitle").textContent = "傳送中…"; $("okSub").textContent = "請稍等一下"; }
+  try {
+    const r = await rpc("elder_report", { p_token: TOKEN, p_kind: "ok", p_client_at: at });
+    if (!r || !r.ok) throw new Error(r && r.error || "fail");
+    store.del("pb2_pending");
+    state.okAt = r.at; state.pendingAt = null; state.streak = r.streak || state.streak;
+    paint();
+    say("好的，已經收到您今天的平安，" + spokenTime(r.at) + "完成。祝您今天平安順心。");
+  } catch (e) {
+    if (String(e.message) === "invalid") { showBad("這個連結已經停用了，請聯絡志工。"); return; }
+    state.pendingAt = hm(new Date(at)); paint();
+    if (!auto) say("現在網路不太好，已經先記下來了，連上網路會自動送出。");
+  }
+}
+
+/* ── 我需要幫忙（先確認，避免按錯）── */
+async function sendHelp() {
+  $("dlg").classList.remove("on");
+  if (PREVIEW) { state.helpAt = hm(); paint(); return; }
+  const n = $("note"); n.className = "note warn"; n.textContent = "傳送中…";
+  try {
+    const r = await rpc("elder_report", { p_token: TOKEN, p_kind: "help" });
+    if (!r || !r.ok) throw new Error("fail");
+    state.helpAt = r.at; paint();
+    say("好的，已經通知" + INFO.vol_name + "，會盡快打電話給您。");
+  } catch (e) {
+    n.className = "note warn";
+    n.textContent = "現在沒有網路，訊息送不出去。請直接按下面藍色的「打給志工」。";
+    say("現在沒有網路，請直接按藍色的按鈕，打電話給志工。");
+  }
+}
+
+function readAloud() {
+  if (!INFO) return;
+  let t = `${INFO.name}，${greet()}。今天是${spokenDate()}。`;
+  t += state.okAt
+    ? `您今天${spokenTime(state.okAt)}已經回報平安了，謝謝您。`
+    : `每天${spokenTime(INFO.deadline)}以前，按一下綠色的「我今天平安」，志工就會收到。`;
+  t += "需要幫忙，按橘色按鈕。緊急狀況，請按紅色按鈕撥一一九。";
+  say(t);
+}
+
+function showBad(msg) {
+  $("loading").classList.add("hide"); $("elder").classList.add("hide");
+  $("bad").classList.remove("hide"); if (msg) $("badTxt").textContent = msg;
+}
+
+function makeTouchIcon() {
+  try { const c = document.createElement("canvas"); c.width = c.height = 180; const x = c.getContext("2d");
+    x.fillStyle = "#2E7D5B"; x.fillRect(0, 0, 180, 180); x.fillStyle = "#FFFFFF"; x.font = "900 64px sans-serif";
+    x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("平安", 90, 78);
+    x.font = "700 34px sans-serif"; x.fillText("✓ 按一下", 90, 132);
+    $("touchIcon").href = c.toDataURL("image/png"); } catch (e) {}
+}
+
+async function boot() {
+  if (!CFG.url || /你的/.test(CFG.url)) { showBad("系統還沒設定完成（config.js）。"); return; }
+  TOKEN = parseHash();
+  const first = TOKEN && store.get("pb2_token") !== TOKEN;
+  if (!TOKEN) TOKEN = store.get("pb2_token") || "";
+  if (!TOKEN) { showBad("請用志工給您的專屬連結打開平安鈴。"); return; }
+  try {
+    INFO = await rpc("elder_info", { p_token: TOKEN });
+  } catch (e) {
+    const pend = JSON.parse(store.get("pb2_pending") || "null");
+    INFO = JSON.parse(store.get("pb2_info") || "null");
+    if (!INFO) { showBad("現在連不上網路，請稍後再打開。"); return; }
+    if (pend && pend.day === dkey()) state.pendingAt = hm(new Date(pend.at));
+  }
+  if (!INFO || INFO.ok === false) { showBad("這個連結已經停用了，請聯絡志工。"); store.del("pb2_token"); return; }
+  if (!PREVIEW) { store.set("pb2_token", TOKEN); store.set("pb2_info", JSON.stringify(INFO)); }
+
+  state.okAt = PREVIEW ? null : INFO.ok_at || null;
+  state.helpAt = PREVIEW ? null : INFO.help_at || null;
+  state.streak = PREVIEW ? 0 : INFO.streak || 0;
+
+  $("loading").classList.add("hide"); $("elder").classList.remove("hide");
+  $("preview").classList.toggle("hide", !PREVIEW);
+  $("setup").classList.toggle("hide", !(first && !PREVIEW));
+  $("hello").textContent = INFO.name;
+  $("date").textContent = greet() + "！" + dateText();
+  $("volName").textContent = INFO.vol_name;
+  $("callVol").href = INFO.vol_phone ? "tel:" + INFO.vol_phone.replace(/[^\d+]/g, "") : "#";
+  $("foot").textContent = (INFO.village ? INFO.village + "・" : "") + "厝邊平安鈴";
+  document.title = "平安鈴｜" + INFO.name;
+  makeTouchIcon();
+  paint();
+
+  /* 有暫存未送出 → 自動補送 */
+  const pend = JSON.parse(store.get("pb2_pending") || "null");
+  if (pend && pend.day !== dkey()) store.del("pb2_pending");
+  else if (pend && !state.okAt && !PREVIEW) sendOk(true);
+}
+
+$("okBtn").onclick = () => sendOk(false);
+$("helpBtn").onclick = () => { $("dlg").classList.add("on"); say("要請志工打電話給您嗎？"); };
+$("helpYes").onclick = sendHelp;
+$("helpNo").onclick = () => $("dlg").classList.remove("on");
+$("speakBtn").onclick = readAloud;
+$("callVol").addEventListener("click", e => {
+  if (PREVIEW || !INFO || !INFO.vol_phone) { e.preventDefault(); if (PREVIEW) { $("note").className = "note warn"; $("note").textContent = "（預覽）會撥電話給志工"; } }
+});
+window.addEventListener("online", () => { if (state.pendingAt && !state.okAt) sendOk(true); });
+setInterval(() => { if (state.pendingAt && !state.okAt) sendOk(true); }, 30000);
+/* 跨過午夜自動換新的一天 */
+let bootDay = dkey();
+setInterval(() => { if (dkey() !== bootDay) location.reload(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && dkey() !== bootDay) location.reload(); });
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>今日關懷工作台｜厝邊平安鈴</title>
+<meta name="theme-color" content="#1F5F73">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="care.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --paper:#FBF5E9;--ink:#33302A;--mute:#7A7364;--line:#E4D9C3;--card:#FFFFFF;
+    --civic:#1F5F73;--civic-soft:#E7F1F4;
+    --ok:#2E7D5B;--ok-soft:#E3F2EA;
+    --wait:#B8931A;--wait-soft:#FBF3D6;
+    --late:#B5372A;--late-soft:#F9E2DE;
+    --help:#D2691E;--help-soft:#FCEBDD;
+    --shadow:0 4px 16px rgba(51,48,42,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{font-size:17px}
+  body{font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;background:var(--paper);color:var(--ink);
+    line-height:1.6;min-height:100vh}
+  button,input,select,textarea{font-family:inherit;font-size:1rem;color:inherit}
+  button{cursor:pointer}
+  button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #A8781F;outline-offset:2px}
+  .hide{display:none!important}
+  .wrap{max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 14px 110px}
+
+  /* ── 標頭 ── */
+  header.bar{background:var(--civic);color:#FDF6E9;border-radius:20px;padding:16px 16px 14px;box-shadow:0 8px 22px rgba(31,95,115,.25)}
+  header.bar .row{display:flex;align-items:center;gap:12px}
+  .bell{width:50px;height:50px;flex:0 0 50px;border-radius:50%;border:3px solid #FDF6E9;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+  header.bar h1{font-family:"Noto Serif TC","PMingLiU",serif;font-size:1.45rem;letter-spacing:2px;font-weight:900;line-height:1.3}
+  header.bar p{font-size:.88rem;opacity:.9}
+  .menuBtn{margin-left:auto;white-space:nowrap;flex:0 0 auto;background:rgba(253,246,233,.15);border:2px solid rgba(253,246,233,.5);color:#FDF6E9;border-radius:12px;padding:6px 10px;font-weight:800}
+  .live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#9FD9B8;margin-right:6px;vertical-align:middle}
+  .live.off{background:#E8B4AC}
+
+  /* ── 三個數字 ── */
+  .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .sum{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center;box-shadow:var(--shadow)}
+  .sum b{display:block;font-size:1.8rem;line-height:1.2}
+  .sum span{font-size:.82rem;color:var(--mute)}
+  .sum.ok b{color:var(--ok)} .sum.wait b{color:var(--wait)} .sum.alert b{color:var(--late)}
+
+  /* ── 今日關懷：比例條 ── */
+  .care{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:12px;box-shadow:var(--shadow)}
+  .care h2{font-size:1rem;letter-spacing:1px;margin-bottom:8px}
+  .ratio{display:flex;height:14px;border-radius:8px;overflow:hidden;background:#EFE8DA}
+  .ratio i{display:block;height:100%}
+  .ratio .ok{background:var(--ok)} .ratio .wait{background:var(--wait)} .ratio .late{background:var(--late)} .ratio .help{background:var(--help)}
+  .chips{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:10px}
+  .chip{background:none;border:none;text-align:left;font-size:.98rem;padding:4px 2px;border-radius:8px}
+  .chip b{font-size:1.15rem}
+  .chip.on{background:var(--civic-soft)}
+
+  /* ── 分頁 ── */
+  .tabs{display:flex;gap:6px;margin-top:16px;border-bottom:2px solid var(--line)}
+  .tab{background:none;border:none;padding:8px 12px;font-weight:800;color:var(--mute);border-bottom:4px solid transparent;margin-bottom:-2px}
+  .tab.on{color:var(--civic);border-bottom-color:var(--civic)}
+  .tab .n{display:inline-block;min-width:22px;border-radius:11px;background:var(--late);color:#fff;font-size:.8rem;padding:0 6px;margin-left:4px}
+  .tab .n.zero{background:var(--line);color:var(--mute)}
+  .filter{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:.9rem;color:var(--mute);gap:8px}
+  .filter label{display:flex;align-items:center;gap:6px}
+  .filter input{width:20px;height:20px}
+
+  /* ── 個案卡 ── */
+  .case{background:var(--card);border:1px solid var(--line);border-left:8px solid var(--late);border-radius:16px;
+    padding:14px 14px 12px;margin-top:12px;box-shadow:var(--shadow)}
+  .case.c-help{border-left-color:var(--help)}
+  .case.c-wait{border-left-color:var(--wait)}
+  .case.lv3{box-shadow:0 0 0 3px rgba(181,55,42,.25),var(--shadow)}
+  .c-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .c-name{font-size:1.35rem;font-weight:900;letter-spacing:1px;line-height:1.3}
+  .c-lv{font-size:.8rem;font-weight:800;border-radius:20px;padding:3px 10px;white-space:nowrap;background:var(--civic-soft);color:var(--civic)}
+  .c-lv.l2{background:var(--help-soft);color:#8A4210}
+  .c-lv.l3{background:var(--late);color:#fff}
+  .c-why{font-size:1rem;margin-top:2px}
+  .c-why .last{color:var(--mute);font-size:.9rem;display:block}
+
+  /* 六階段進度 */
+  .track{list-style:none;display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:12px 0 4px}
+  .track li{height:30px;border-radius:6px;background:#EFE8DA;color:var(--mute);font-size:.8rem;font-weight:800;
+    display:flex;align-items:center;justify-content:center}
+  .track li.done{background:#D9CFBC;color:var(--ink)}
+  .track li.cur{background:var(--late);color:#fff}
+  .c-help .track li.cur{background:var(--help)}
+  .track li.fin{background:var(--ok);color:#fff}
+  .c-now{font-size:.95rem;font-weight:700}
+  .c-now small{font-weight:400;color:var(--mute)}
+  .c-next{font-size:.84rem;color:var(--mute);margin-top:2px}
+  .hint{font-size:.88rem;background:var(--wait-soft);color:#6E5510;border-radius:10px;padding:6px 10px;margin-top:8px}
+  .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .btn{border:2px solid var(--civic);background:#fff;color:var(--civic);border-radius:12px;padding:10px 12px;font-weight:800;
+    flex:1;min-width:0;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+  .btn.primary{background:var(--civic);color:#fff}
+  .btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+  .btn.warn{border-color:var(--late);color:var(--late)}
+  .btn.orange{border-color:var(--help);color:#A34E12}
+  .btn.ghost{border-color:var(--line);color:var(--ink)}
+  .btn.sm{padding:7px 8px;font-size:.88rem}
+  .acts.main{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .acts.main .btn{font-size:1rem;padding:12px 4px;white-space:nowrap}
+  .acts.two{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .acts.two .btn{white-space:nowrap}
+
+  /* ── 全部長輩列表 ── */
+  .erow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:10px 12px;margin-top:8px;width:100%;text-align:left}
+  .erow .nm{font-weight:900;font-size:1.1rem}
+  .erow .meta{font-size:.82rem;color:var(--mute)}
+  .erow .grow{flex:1;min-width:0}
+  .pill{border-radius:30px;padding:3px 10px;font-size:.84rem;font-weight:800;white-space:nowrap}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.wait{background:var(--wait-soft);color:#7A5F0E}
+  .pill.late{background:var(--late-soft);color:var(--late)} .pill.help{background:var(--help-soft);color:#A34E12}
+  .dots{display:flex;gap:4px;margin-top:4px}
+  .dot{width:13px;height:13px;border-radius:50%;background:#EDE7DA;display:inline-block}
+  .dot.ok{background:var(--ok)} .dot.late{background:var(--wait)} .dot.miss{background:var(--late)}
+  .dot.help{background:var(--help)} .dot.checked{background:#fff;border:3px solid var(--late)} .dot.wait{background:#fff;border:2px dashed var(--wait)}
+
+  .empty{margin-top:16px;background:var(--card);border:2px dashed var(--line);border-radius:16px;padding:24px 18px;text-align:center;color:var(--mute)}
+  .empty b{display:block;color:var(--ok);font-size:1.2rem;margin-bottom:4px}
+  .sub-h{margin-top:22px;font-size:1rem;color:var(--mute);letter-spacing:1px}
+
+  /* ── 登入 ── */
+  .login{max-width:420px;margin:12vh auto 0;padding:0 18px}
+  .login .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 18px;box-shadow:var(--shadow)}
+  .login h1{font-family:"Noto Serif TC","PMingLiU",serif;font-size:1.6rem;letter-spacing:2px;margin-bottom:4px}
+
+  /* ── 對話框 ── */
+  #dlg{position:fixed;inset:0;background:rgba(51,48,42,.45);display:none;z-index:50;align-items:flex-end;justify-content:center}
+  #dlg.on{display:flex}
+  .sheet{background:var(--paper);width:100%;max-width:760px;border-radius:22px 22px 0 0;padding:20px 18px calc(28px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+  .sheet h2{font-size:1.25rem;letter-spacing:1px;margin-bottom:6px}
+  .sheet h3{font-size:1rem;margin:18px 0 6px;color:var(--civic)}
+  .d{font-size:.88rem;color:var(--mute);margin-bottom:6px;line-height:1.6}
+  label.f{display:block;font-weight:700;margin:12px 0 5px}
+  label.f small{font-weight:400;color:var(--mute)}
+  input[type=text],input[type=tel],input[type=time],input[type=email],input[type=password],input[type=number],select,textarea{
+    width:100%;border:2px solid var(--line);border-radius:12px;background:#FFFDF8;padding:10px 12px}
+  textarea{min-height:64px;resize:vertical}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .radio{display:flex;gap:8px;flex-wrap:wrap}
+  .radio label{flex:1;min-width:120px;border:2px solid var(--line);border-radius:12px;padding:9px;background:#FFFDF8;display:flex;gap:8px;align-items:flex-start;font-size:.92rem}
+  .consent{display:flex;gap:10px;align-items:flex-start;margin-top:14px;background:#FFF4E8;border-radius:12px;padding:10px 12px;font-size:.9rem}
+  .consent input{width:22px;height:22px;flex:0 0 22px;margin-top:2px}
+  .msg{min-height:1.3em;margin-top:10px;font-size:.9rem;color:var(--civic)}
+  .msg.err{color:var(--late)}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+  .stat span{font-size:.8rem;color:var(--mute);display:block}
+  .stat b{font-size:1.15rem}
+  .cal{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:8px}
+  .cal i{aspect-ratio:1;border-radius:6px;background:#EDE7DA;font-style:normal;font-size:.68rem;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+  .cal i.ok{background:var(--ok)} .cal i.late{background:var(--wait)} .cal i.miss{background:var(--late)} .cal i.help{background:var(--help)}
+  .cal i.checked{background:#fff;border:2px solid var(--late);color:var(--late)} .cal i.wait,.cal i.none{background:#EDE7DA;color:var(--mute)}
+  .legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.88rem;margin-top:8px}
+  .tl{list-style:none;border-left:3px solid var(--line);margin:6px 0 0 6px;padding-left:12px}
+  .tl li{margin:0 0 8px;font-size:.9rem;position:relative}
+  .tl li::before{content:"";position:absolute;left:-19px;top:7px;width:11px;height:11px;border-radius:50%;background:var(--civic)}
+  .tl li.sys::before{background:var(--mute)}
+  .tl time{font-weight:800;margin-right:6px}
+  .tl small{color:var(--mute)}
+  .staff{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px}
+  .staff .grid2{margin-top:6px}
+
+  #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;
+    border-radius:14px;padding:10px 16px;font-size:.95rem;z-index:80;max-width:90vw;display:none}
+  #toast.on{display:block}
+  footer.credit{margin-top:30px;text-align:center;font-size:.8rem;color:var(--mute);line-height:1.8}
+  @media (max-width:420px){.acts.main .btn{font-size:.92rem;padding:11px 2px}.track li{font-size:.72rem}}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ═════════ 登入 ═════════ -->
+<div id="loginView" class="login hide">
+  <div class="card">
+    <h1>🔔 今日關懷工作台</h1>
+    <p class="d">厝邊平安鈴・志工／里長／社工登入。帳號由管理者建立。</p>
+    <label class="f" for="lEmail">電子郵件</label><input type="email" id="lEmail" autocomplete="username">
+    <label class="f" for="lPw">密碼</label><input type="password" id="lPw" autocomplete="current-password">
+    <div class="acts"><button class="btn primary" id="lGo" type="button">登入</button></div>
+    <div class="msg" id="lMsg"></div>
+  </div>
+</div>
+
+<!-- ═════════ 帳號待開通 ═════════ -->
+<div id="waitView" class="login hide">
+  <div class="card">
+    <h1>⏳ 帳號待開通</h1>
+    <p class="d">已經登入，但管理者還沒有開通這個帳號。請把下面這串代碼傳給管理者：</p>
+    <p class="stat" id="wId" style="word-break:break-all;font-weight:700"></p>
+    <div class="acts"><button class="btn ghost" id="wOut" type="button">登出</button></div>
+  </div>
+</div>
+
+<!-- ═════════ 工作台 ═════════ -->
+<div id="mainView" class="wrap hide">
+  <header class="bar">
+    <div class="row">
+      <div class="bell" aria-hidden="true">🔔</div>
+      <div>
+        <h1>今日關懷工作台</h1>
+        <p id="subTxt"></p>
+      </div>
+      <button class="menuBtn" id="menuBtn" type="button">☰ 選單</button>
+    </div>
+  </header>
+
+  <div class="summary">
+    <div class="sum ok"><b id="nOk">0</b><span>今天已平安</span></div>
+    <div class="sum wait"><b id="nWait">0</b><span>等待回報</span></div>
+    <div class="sum alert"><b id="nAlert">0</b><span>需要處理</span></div>
+  </div>
+
+  <section class="care" aria-label="今日關懷">
+    <h2>今日關懷</h2>
+    <div class="ratio" id="ratio"></div>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <nav class="tabs">
+    <button class="tab on" data-t="todo" type="button">今天需要處理<span class="n" id="tTodo">0</span></button>
+    <button class="tab" data-t="all" type="button">全部長輩</button>
+  </nav>
+  <div class="filter">
+    <label><input type="checkbox" id="onlyMine"> 只看我負責的</label>
+    <span id="syncTxt"></span>
+  </div>
+
+  <div id="list"></div>
+
+  <div class="acts" id="addWrap" style="margin-top:18px"><button class="btn ghost" id="addBtn" type="button">＋ 新增長輩</button></div>
+
+  <footer class="credit">
+    平安鈴是<b>關懷輔助</b>，不是緊急救護。遇到跌倒、昏迷、呼吸困難，請直接撥 <b>119</b>。<br>
+    正修科技大學 大學社會責任（USR）× 厝邊平安鈴 v2
+  </footer>
+</div>
+
+<div id="dlg"><div class="sheet" id="sheet"></div></div>
+<div id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+"use strict";
+const CFG = window.PEACE_CONFIG || {};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+const WEEK = "日一二三四五六";
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const digits = p => String(p || "").replace(/[^\d+]/g, "");
+
+let sb = null, ME = null, SETTINGS = {}, PROFILES = [], BOARD = [];
+let TAB = "todo", FILTER = null, lastLoad = null;
+
+/* ── 顯示用 ── */
+const STAGE = {1:"尚未回報",2:"第一次聯絡未接",3:"第二次聯絡未接",4:"已通知家屬",5:"已通知里長／社工",6:"已確認安全／結案"};
+const STAGE_NO = ["","第一","第二","第三","第四","第五","第六"];
+const ROLE = {volunteer:"志工",chief:"里長",social:"社工",admin:"管理者"};
+const DAYST = {ok:"準時平安",late:"較晚回報",help:"求助",checked:"志工確認平安（未自行回報）",miss:"未回報",wait:"等待中",none:"—"};
+const CAT = {
+  ok:  {icon:"🟢", label:"已平安"},
+  wait:{icon:"🟡", label:"尚未回報"},
+  late:{icon:"🔴", label:"逾時"},
+  help:{icon:"🟠", label:"需要協助"}
+};
+function tm(ts){ if(!ts) return ""; const d=new Date(ts); return pad(d.getHours())+":"+pad(d.getMinutes()); }
+function dayDiff(ts){ const a=new Date(ts); a.setHours(0,0,0,0); const b=new Date(); b.setHours(0,0,0,0); return Math.round((b-a)/864e5); }
+function rel(ts){
+  if(!ts) return "沒有紀錄";
+  const n=dayDiff(ts), d=new Date(ts);
+  const day = n===0?"今天":n===1?"昨天":n===2?"前天":(d.getMonth()+1)+"/"+d.getDate();
+  return day+" "+tm(ts);
+}
+function md(dstr){ const d=new Date(dstr+"T00:00:00"); return (d.getMonth()+1)+"/"+d.getDate(); }
+function todayText(){ const d=new Date(); return (d.getMonth()+1)+"月"+d.getDate()+"日（"+WEEK[d.getDay()]+"）"; }
+function addMin(ts,m){ return new Date(new Date(ts).getTime()+m*60000); }
+function nameOf(id){ const p=PROFILES.find(x=>x.id===id); return p ? (p.name||"（未命名）") : ""; }
+function isManager(){ return ME && ME.active && ["chief","social","admin"].includes(ME.role); }
+function isAdmin(){ return ME && ME.active && ME.role==="admin"; }
+
+function toast(t, ms=2600){ const el=$("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove("on"),ms); }
+function openSheet(html){ $("sheet").innerHTML=html; $("dlg").classList.add("on"); $("sheet").scrollTop=0; }
+function closeSheet(){ $("dlg").classList.remove("on"); }
+$("dlg").onclick = e => { if(e.target.id==="dlg") closeSheet(); };
+function go(url){ const a=document.createElement("a"); a.href=url; a.rel="noopener"; if(url.startsWith("http")) a.target="_blank"; document.body.appendChild(a); a.click(); a.remove(); }
+function smsHref(p,body){ return "sms:"+digits(p)+(isIOS?"&":"?")+"body="+encodeURIComponent(body); }
+async function copyText(t){ try{ await navigator.clipboard.writeText(t); }catch(e){ const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); } }
+function download(name,text,type){ const b=new Blob([text],{type}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); }
+
+async function rpc(fn,args){ const {data,error}=await sb.rpc(fn,args||{}); if(error) throw new Error(error.message); return data; }
+
+/* ══════════ 分類：每位長輩今天屬於哪一類 ══════════ */
+function cat(x){
+  const c=x.today_case;
+  if(c && !c.closed_at) return (c.reason==="help"||c.need_help) ? "help" : "late";
+  if(c && c.closed_at) return "ok";
+  if(["ok","late","checked"].includes(x.today_status)) return "ok";
+  if(x.today_status==="miss") return "late";
+  if(x.today_status==="help") return "help";
+  return "wait";
+}
+function mine(x){
+  if(!ME) return true;
+  const lv = x.today_case ? x.today_case.level : 1;
+  return x.primary_vol===ME.id || x.backup_vol===ME.id || (lv===3 && isManager());
+}
+function hints(x){
+  const h=[];
+  if(x.late7>=3) h.push(`最近 7 天有 ${x.late7} 次晚於設定時間回報，建議關懷。`);
+  if(x.mode==="self" && x.miss7>=2) h.push(`最近 7 天有 ${x.miss7} 天沒有自己按平安，建議關懷。`);
+  return h;
+}
+
+/* ══════════ 畫面 ══════════ */
+function render(){
+  $("subTxt").innerHTML = `<span class="live ${liveOk?"":"off"}"></span>${esc(todayText())}　${esc(SETTINGS.village||"")}　${esc(ME.name||"")}（${ROLE[ME.role]||""}）`;
+  const rows = BOARD.map(x=>({x, k:cat(x)}));
+  const cnt = {ok:0,wait:0,late:0,help:0};
+  rows.forEach(r=>cnt[r.k]++);
+  $("nOk").textContent=cnt.ok; $("nWait").textContent=cnt.wait; $("nAlert").textContent=cnt.late+cnt.help;
+  const total = rows.length || 1;
+  $("ratio").innerHTML = ["ok","wait","late","help"].map(k=>cnt[k]?`<i class="${k}" style="width:${cnt[k]/total*100}%" title="${CAT[k].label} ${cnt[k]} 位"></i>`:"").join("");
+  $("chips").innerHTML = ["ok","wait","late","help"].map(k=>
+    `<button class="chip ${FILTER===k?"on":""}" data-k="${k}" type="button">${CAT[k].icon} <b>${cnt[k]}</b> 位 ${CAT[k].label}</button>`).join("");
+  $("chips").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{
+    FILTER = FILTER===b.dataset.k ? null : b.dataset.k; TAB="all"; syncTabs(); render();
+  });
+
+  const only = $("onlyMine").checked;
+  const view = rows.filter(r=>!only || mine(r.x));
+  const todo = view.filter(r=>r.k==="late"||r.k==="help");
+  const tn=$("tTodo"); tn.textContent=todo.length; tn.classList.toggle("zero",!todo.length);
+  $("addWrap").classList.toggle("hide", !isManager());
+
+  const list=$("list"); list.innerHTML="";
+  if(!BOARD.length){
+    list.innerHTML = `<div class="empty"><b style="color:var(--ink)">還沒有長輩名單</b>${isManager()?"按下方「＋ 新增長輩」開始，或從選單匯入舊版備份檔。":"請里長或社工先建立名冊。"}</div>`;
+    return;
+  }
+
+  if(TAB==="todo"){
+    const lvOrder = r => (r.x.today_case ? r.x.today_case.level : 1);
+    todo.sort((a,b)=> lvOrder(b)-lvOrder(a) || (a.k==="help"?-1:0)-(b.k==="help"?-1:0)
+      || ((a.x.today_case||{}).stage||1)-((b.x.today_case||{}).stage||1) || a.x.deadline.localeCompare(b.x.deadline));
+    if(!todo.length){
+      const next = view.filter(r=>r.k==="wait").map(r=>r.x.deadline).sort()[0];
+      list.innerHTML = `<div class="empty"><b>✅ 目前沒有需要處理的人</b>${next?`下一個回報時間是 ${esc(next)}，逾時系統會主動通知。`:"今天大家都平安了，辛苦了！"}</div>`;
+    } else todo.forEach(r=>list.appendChild(caseCard(r.x,r.k)));
+    const calls = view.filter(r=>r.k==="wait" && r.x.mode==="call");
+    if(calls.length){
+      const h=document.createElement("h3"); h.className="sub-h"; h.textContent="📞 今天要電話問安"; list.appendChild(h);
+      calls.forEach(r=>list.appendChild(callCard(r.x)));
+    }
+  } else {
+    const order={late:0,help:1,wait:2,ok:3};
+    view.filter(r=>!FILTER||r.k===FILTER)
+      .sort((a,b)=>order[a.k]-order[b.k] || a.x.deadline.localeCompare(b.x.deadline))
+      .forEach(r=>list.appendChild(rowItem(r.x,r.k)));
+    if(FILTER){
+      const b=document.createElement("button"); b.className="btn ghost"; b.style.marginTop="12px"; b.type="button";
+      b.textContent="顯示全部（目前只看："+CAT[FILTER].label+"）"; b.onclick=()=>{FILTER=null;render();}; list.appendChild(b);
+    }
+  }
+}
+
+function caseCard(x,k){
+  const c = x.today_case;
+  const stage = c ? c.stage : 1, lv = c ? c.level : 1;
+  const isHelp = k==="help";
+  const el=document.createElement("article");
+  el.className = "case "+(isHelp?"c-help":"c-late")+(lv===3?" lv3":"");
+  const why = isHelp
+    ? (x.help_at ? `${tm(x.help_at)} 按了「我需要幫忙」` : "志工標記需要協助")
+    : x.mode==="call" ? `${esc(x.deadline)} 前還沒完成電話問安` : `${esc(x.deadline)} 前未回報`;
+  const stLabel = (stage===1 && isHelp) ? "長輩請求協助" : STAGE[stage];
+  const lvTxt = lv===3 ? `⏫ 已通報里長／社工 ${tm(c.level_changed_at)}`
+              : lv===2 ? `⏫ 已轉交備援 ${esc(x.backup_name||"里長／社工")}`
+              : `主責 ${esc(x.primary_name||"未指定")}`;
+  let now = `目前：${STAGE_NO[stage]}階段・${stLabel}`;
+  let who = "";
+  if(c && c.last_event) who = `${tm(c.last_event.at)} ${c.last_event.actor?esc(c.last_event.actor):"系統"}${c.last_event.note?"：「"+esc(c.last_event.note)+"」":""}`;
+  let next = "";
+  if(c){
+    const parts=[];
+    if(lv===1 && !c.last_human_at) parts.push(`${tm(addMin(c.opened_at,SETTINGS.backup_after_min||30))} 前沒人處理，轉交備援${x.backup_name?" "+esc(x.backup_name):""}`);
+    if(lv<3) parts.push(`${tm(addMin(c.opened_at,SETTINGS.chief_after_min||60))} 仍未確認平安，通報里長／社工`);
+    next = parts.join("；");
+  } else next = "系統將在 1 分鐘內開案並推播主責志工";
+  const track = [1,2,3,4,5,6].map(i=>`<li class="${i<stage?"done":i===stage?"cur":""}" title="${STAGE[i]}">${i}</li>`).join("");
+  const hs = hints(x).map(h=>`<p class="hint">⚠ ${esc(h)}</p>`).join("");
+  el.innerHTML = `
+    <div class="c-top">
+      <div class="c-name">${isHelp?"🟠":"🔴"} ${esc(x.name)}</div>
+      <span class="c-lv ${lv===3?"l3":lv===2?"l2":""}">${lvTxt}</span>
+    </div>
+    <p class="c-why">${why}<span class="last">最後回報：${esc(rel(x.last_ok_at))}</span></p>
+    <ol class="track" aria-label="處理進度">${track}</ol>
+    <p class="c-now">${now}${who?` <small>（${who}）</small>`:""}</p>
+    <p class="c-next">${next}</p>
+    ${x.note?`<p class="c-next">📝 ${esc(x.note)}</p>`:""}
+    ${hs}
+    <div class="acts main">
+      <button class="btn primary" data-a="call" type="button">📞 打電話</button>
+      <button class="btn warn" data-a="family" type="button">📣 通知家屬</button>
+      <button class="btn ok" data-a="safe" type="button">✅ 已確認平安</button>
+    </div>
+    <div class="acts two">
+      <button class="btn sm orange" data-a="help" type="button">🙋 需要協助</button>
+      <button class="btn sm warn" data-a="miss" type="button">❌ 聯絡不上</button>
+      <button class="btn sm warn" data-a="chief" type="button">📣 通知里長／社工</button>
+      <button class="btn sm ghost" data-a="detail" type="button">🗂 紀錄</button>
+    </div>`;
+  el.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>act(x,b.dataset.a));
+  return el;
+}
+
+function callCard(x){
+  const el=document.createElement("article");
+  el.className="case c-wait";
+  el.innerHTML = `
+    <div class="c-top"><div class="c-name">📞 ${esc(x.name)}</div><span class="c-lv">主責 ${esc(x.primary_name||"未指定")}</span></div>
+    <p class="c-why">${esc(x.deadline)} 前電話問安<span class="last">上次問安：${esc(rel(x.last_ok_at))}</span></p>
+    ${x.note?`<p class="c-next">📝 ${esc(x.note)}</p>`:""}
+    <div class="acts two">
+      <button class="btn primary" data-a="call" type="button">📞 打電話</button>
+      <button class="btn ok" data-a="safe" type="button">✅ 電話問安平安</button>
+    </div>`;
+  el.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>act(x,b.dataset.a));
+  return el;
+}
+
+function dotsHtml(arr){ return (arr||[]).map((s,i)=>`<span class="dot ${s}" title="${i===6?"今天":(6-i)+" 天前"}：${DAYST[s]||""}"></span>`).join(""); }
+
+function rowItem(x,k){
+  const b=document.createElement("button"); b.type="button"; b.className="erow";
+  let pill = CAT[k].label;
+  if(k==="ok"){ pill = x.today_safe_at ? "平安 "+tm(x.today_safe_at) : "已平安"; }
+  if(k==="wait"){ pill = (x.mode==="call"?"待問安 ":"等待 ")+x.deadline+" 前"; }
+  const h = hints(x).length ? " ⚠" : "";
+  b.innerHTML = `
+    <div class="grow">
+      <div class="nm">${esc(x.name)}${h}</div>
+      <div class="meta">${x.mode==="call"?"志工電話問安":"自己按平安鈴"}・連續 ${x.streak} 天・主責 ${esc(x.primary_name||"未指定")}</div>
+      <div class="dots" aria-label="近 7 天">${dotsHtml(x.dots7)}</div>
+    </div>
+    <span class="pill ${k}">${esc(pill)}</span>`;
+  b.onclick=()=>showDetail(x);
+  return b;
+}
+
+/* ══════════ 處理動作 ══════════ */
+async function doAction(x, action, note, okMsg){
+  try{
+    await rpc("case_action",{p_elder:x.id, p_action:action, p_note:note||""});
+    toast(okMsg||"已記錄"); closeSheet(); await load();
+  }catch(e){ toast("沒有記錄成功："+e.message, 4000); }
+}
+function reasonText(x){
+  const k=cat(x);
+  if(k==="help") return "表示需要協助";
+  const c=x.today_case;
+  if(c && c.stage>=2) return `到 ${x.deadline} 沒有回報平安，志工打電話也沒有接`;
+  return `到 ${x.deadline} 還沒有回報平安`;
+}
+function stageNow(x){ const c=x.today_case; return c ? STAGE[c.stage] : STAGE[1]; }
+
+function act(x,a){
+  if(a==="detail") return showDetail(x);
+  if(a==="call"){
+    if(!x.phone){ toast("還沒有長輩電話，請里長或社工到「編輯」補上"); return; }
+    openSheet(`<h2>📞 ${esc(x.name)} 有接電話嗎？</h2>
+      <p class="d">撥號後回到這裡記錄結果。可以寫一句狀況（選填，勿寫病歷）。</p>
+      <textarea id="cNote" placeholder="例：聲音聽起來累，說昨晚沒睡好"></textarea>
+      <div class="acts two">
+        <button class="btn ok" id="cOk" type="button">✅ 有接，平安</button>
+        <button class="btn orange" id="cHelp" type="button">🙋 有接，需要協助</button>
+      </div>
+      <div class="acts"><button class="btn warn" id="cNo" type="button">❌ 沒有接</button>
+        <a class="btn ghost" href="tel:${digits(x.phone)}">再撥一次</a></div>
+      <div class="acts"><button class="btn ghost" id="cCancel" type="button">先不記錄</button></div>`);
+    $("cOk").onclick=()=>doAction(x,"confirm_safe","電話確認平安"+($("cNote").value.trim()?"："+$("cNote").value.trim():""),"✅ 已確認平安");
+    $("cHelp").onclick=()=>doAction(x,"need_help",$("cNote").value.trim(),"🟠 已標記需要協助");
+    $("cNo").onclick=()=>doAction(x,"call_noanswer",$("cNote").value.trim(),"已記錄：聯絡未接");
+    $("cCancel").onclick=closeSheet;
+    location.href = "tel:"+digits(x.phone);
+    return;
+  }
+  if(a==="safe"){
+    const call = x.mode==="call" && !x.today_case;
+    openSheet(`<h2>✅ ${esc(x.name)} ${call?"電話問安平安":"已確認平安"}</h2>
+      <p class="d">${call?"記錄今天的電話問安。":"確認後會結案，並通知其他關懷人員不用再處理。"}</p>
+      ${call?"":`<label class="f">怎麼確認的</label>
+      <div class="radio">
+        <label><input type="radio" name="how" value="電話確認" checked> 電話確認</label>
+        <label><input type="radio" name="how" value="家屬確認"> 家屬確認</label>
+        <label><input type="radio" name="how" value="到府探視"> 到府探視</label>
+        <label><input type="radio" name="how" value="長輩自己回報"> 長輩自己回報</label>
+      </div>`}
+      <label class="f" for="sNote">補充 <small>（選填）</small></label>
+      <textarea id="sNote" placeholder="例：手機沒電，已提醒充電"></textarea>
+      <div class="acts"><button class="btn ok" id="sGo" type="button">✅ 確認</button><button class="btn ghost" id="sNo" type="button">取消</button></div>`);
+    $("sGo").onclick=()=>{
+      const how = call ? "電話問安" : document.querySelector("input[name=how]:checked").value;
+      const n=$("sNote").value.trim();
+      doAction(x,"confirm_safe",how+(n?"："+n:""),"✅ 已確認平安");
+    };
+    $("sNo").onclick=closeSheet; return;
+  }
+  if(a==="help"||a==="miss"){
+    const help=a==="help";
+    openSheet(`<h2>${help?"🙋 需要協助":"❌ 聯絡不上"}：${esc(x.name)}</h2>
+      <p class="d">${help?"標記後會留在「需要處理」，直到有人確認平安結案。":"會把進度往下推一階（第一次未接 → 第二次未接）。"}寫一句狀況，方便下一位接手。不要寫病歷或身分證等資料。</p>
+      <textarea id="hNote" placeholder="${help?"例：腳痛想看醫生，需要陪同":"例：10:20、10:40 各打一次都沒接"}"></textarea>
+      <div class="acts"><button class="btn primary" id="hGo" type="button">記錄</button><button class="btn ghost" id="hNo" type="button">取消</button></div>`);
+    $("hGo").onclick=()=>doAction(x, help?"need_help":"call_noanswer", $("hNote").value.trim(), help?"🟠 已標記需要協助":"已記錄：聯絡未接");
+    $("hNo").onclick=closeSheet; return;
+  }
+  if(a==="family"){
+    if(!x.family_phone){ openSheet(`<h2>📣 通知家屬</h2><p class="d">${esc(x.name)} 還沒有登記家屬電話。請里長或社工到「編輯」補上，或改按「通知里長／社工」。</p>
+      <div class="acts"><button class="btn ghost" onclick="closeSheet()" type="button">知道了</button></div>`); return; }
+    const who = x.family_name||"家屬";
+    const body = `【平安鈴】${who}您好：${SETTINGS.village||"本里"}的${x.name}，今天 ${todayText()} ${reasonText(x)}。志工${ME.name||""}已先處理，麻煩協助聯絡確認，謝謝。`;
+    openSheet(`<h2>📣 通知 ${esc(who)}</h2>
+      <p class="d">${esc(x.family_phone)}。按下去會同時記錄「已通知家屬」（第四階段）。</p>
+      <div class="acts two">
+        <button class="btn warn" id="fTel" type="button">📞 打給家屬</button>
+        <button class="btn warn" id="fSms" type="button">💬 傳簡訊</button>
+      </div>
+      <p class="d" style="margin-top:10px">簡訊內容：${esc(body)}</p>
+      <div class="acts"><button class="btn ghost" onclick="closeSheet()" type="button">取消</button></div>`);
+    $("fTel").onclick=async()=>{ await doAction(x,"notify_family","電話","已記錄：已通知家屬"); location.href="tel:"+digits(x.family_phone); };
+    $("fSms").onclick=async()=>{ await doAction(x,"notify_family","簡訊","已記錄：已通知家屬"); go(smsHref(x.family_phone,body)); };
+    return;
+  }
+  if(a==="chief"){
+    const people = PROFILES.filter(p=>p.active && ["chief","social"].includes(p.role));
+    const body = `【平安鈴】您好：${SETTINGS.village||"本里"}的${x.name}，今天 ${todayText()} ${reasonText(x)}。目前進度：${stageNow(x)}。志工${ME.name||""}請求協助，謝謝。`;
+    openSheet(`<h2>📣 通知里長／社工：${esc(x.name)}</h2>
+      <p class="d">按下去會同時記錄「已通知里長／社工」（第五階段）。</p>
+      ${people.length?people.map(p=>`<div class="acts">
+        <span style="flex:1;align-self:center"><b>${esc(p.name)}</b>（${ROLE[p.role]}）${esc(p.phone||"")}</span>
+        ${p.phone?`<button class="btn sm warn" data-tel="${esc(p.phone)}" type="button">📞 打電話</button><button class="btn sm warn" data-sms="${esc(p.phone)}" type="button">💬 簡訊</button>`:""}
+      </div>`).join(""):`<p class="d">名冊裡還沒有里長或社工，請管理者到選單「人員管理」設定。</p>`}
+      <div class="acts"><button class="btn ghost" id="chOther" type="button">已用其他方式通知，只記錄</button></div>
+      <div class="acts"><button class="btn ghost" onclick="closeSheet()" type="button">取消</button></div>`);
+    $("sheet").querySelectorAll("[data-tel]").forEach(b=>b.onclick=async()=>{ const p=b.dataset.tel; await doAction(x,"notify_chief","電話","已記錄：已通知里長／社工"); location.href="tel:"+digits(p); });
+    $("sheet").querySelectorAll("[data-sms]").forEach(b=>b.onclick=async()=>{ const p=b.dataset.sms; await doAction(x,"notify_chief","簡訊","已記錄：已通知里長／社工"); go(smsHref(p,body)); });
+    $("chOther").onclick=()=>doAction(x,"notify_chief","其他方式","已記錄：已通知里長／社工");
+  }
+}
+
+/* ══════════ 長輩詳細：統計、趨勢、今日紀錄 ══════════ */
+async function showDetail(x){
+  openSheet(`<h2>${esc(x.name)}</h2><p class="d">讀取中…</p>`);
+  let s, ev=[];
+  try{
+    s = await rpc("elder_stats",{p_elder:x.id});
+    if(x.today_case){
+      const r = await sb.from("case_events").select("at,action,note,stage,actor").eq("case_id",x.today_case.id).order("at");
+      ev = r.data||[];
+    }
+  }catch(e){ openSheet(`<h2>${esc(x.name)}</h2><p class="msg err">讀取失敗：${esc(e.message)}</p>`); return; }
+
+  const d30 = s.days30||[];
+  const c = {ok:0,late:0,miss:0,help:0};
+  d30.forEach(d=>{ if(d.s==="ok")c.ok++; else if(d.s==="late")c.late++; else if(d.s==="miss"||d.s==="checked")c.miss++; else if(d.s==="help")c.help++; });
+  const rate = s.month_total ? Math.round(s.month_good/s.month_total*100) : null;
+  const h = hints(x);
+  const toHM = m => m==null ? "" : pad(Math.floor(m/60))+":"+pad(Math.round(m%60));
+  if(s.n7>=3 && s.n_prev>=5 && s.avg7 - s.avg_prev >= 60)
+    h.push(`最近一週平均 ${toHM(s.avg7)} 回報，比先前（${toHM(s.avg_prev)}）晚了約 ${Math.round((s.avg7-s.avg_prev)/60*10)/10} 小時。`);
+  if(c.help>=2) h.push(`近 30 天按了 ${c.help} 次「需要幫忙」。`);
+
+  const cal = d30.map(d=>`<i class="${d.s}" title="${md(d.d)} ${DAYST[d.s]||""}">${new Date(d.d+"T00:00:00").getDate()}</i>`).join("");
+  const tl = ev.map(e=>`<li class="${e.actor?"":"sys"}"><time>${tm(e.at)}</time>${esc(e.action)}${e.note?`<br><small>「${esc(e.note)}」</small>`:""}<br><small>${e.actor?esc(nameOf(e.actor)):"系統"}${e.stage?"・第"+e.stage+"階段":""}</small></li>`).join("");
+
+  openSheet(`
+    <h2>${esc(x.name)}</h2>
+    <p class="d">${x.mode==="call"?"志工每天電話問安":"長輩自己按平安鈴"}・每天 ${esc(x.deadline)} 前・主責 ${esc(x.primary_name||"未指定")}・備援 ${esc(x.backup_name||"未指定")}</p>
+    <div class="stats">
+      <div class="stat"><span>最近一次平安</span><b>${esc(rel(s.last_ok_at))}</b></div>
+      <div class="stat"><span>連續回報</span><b>${s.streak} 天</b></div>
+      <div class="stat"><span>本月完成率</span><b>${rate==null?"—":rate+"%"}</b></div>
+      <div class="stat"><span>最近一次異常</span><b>${s.last_abnormal?md(s.last_abnormal):"近 90 天沒有"}</b></div>
+    </div>
+    <h3>過去 30 天</h3>
+    <div class="legend"><span>🟢 準時 <b>${c.ok}</b> 天</span><span>🟡 較晚 <b>${c.late}</b> 天</span><span>🔴 未${x.mode==="call"?"問安":"自行回報"} <b>${c.miss}</b> 天</span><span>🟠 求助 <b>${c.help}</b> 天</span></div>
+    <div class="cal">${cal}</div>
+    ${h.length?h.map(t=>`<p class="hint">⚠ ${esc(t)}</p>`).join("")+`<p class="d" style="margin-top:6px">以上是關懷提醒，不是醫療診斷。</p>`:""}
+    ${ev.length?`<h3>今天的處理紀錄</h3><ol class="tl">${tl}</ol>`:""}
+    <h3>聯絡</h3>
+    <div class="acts">
+      ${x.phone?`<a class="btn sm" href="tel:${digits(x.phone)}">📞 長輩 ${esc(x.phone)}</a>`:""}
+      ${x.family_phone?`<a class="btn sm" href="tel:${digits(x.family_phone)}">📞 ${esc(x.family_name||"家屬")}</a>`:""}
+    </div>
+    <div class="acts">
+      ${x.today_case && !x.today_case.closed_at?`<button class="btn sm ghost" id="dNote" type="button">📝 補充紀錄</button>`:""}
+      ${x.mode==="self"?`<button class="btn sm ghost" id="dLink" type="button">🔗 專屬連結</button>`:""}
+      ${x.mode==="self"?`<button class="btn sm ghost" id="dPrev" type="button">👁 預覽長輩畫面</button>`:""}
+      ${isManager()?`<button class="btn sm ghost" id="dEdit" type="button">✏️ 編輯</button>`:""}
+      ${x.today_status==="ok"&&x.mode==="call"||x.today_status==="checked"?`<button class="btn sm ghost" id="dUndo" type="button">↩ 取消今天志工紀錄</button>`:""}
+    </div>
+    <div class="acts"><button class="btn ghost" onclick="closeSheet()" type="button">關閉</button></div>`);
+  if($("dNote")) $("dNote").onclick=()=>{
+    openSheet(`<h2>📝 補充紀錄：${esc(x.name)}</h2><textarea id="nT" placeholder="例：已請隔壁鄰居去按門鈴"></textarea>
+      <div class="acts"><button class="btn primary" id="nGo" type="button">記錄</button><button class="btn ghost" onclick="closeSheet()" type="button">取消</button></div>`);
+    $("nGo").onclick=()=>{ const t=$("nT").value.trim(); if(t) doAction(x,"note",t,"已補充紀錄"); };
+  };
+  if($("dLink")) $("dLink").onclick=()=>showLink(x);
+  if($("dPrev")) $("dPrev").onclick=()=>window.open(elderUrl(x.token)+"&preview","_blank");
+  if($("dEdit")) $("dEdit").onclick=()=>editElder(x);
+  if($("dUndo")) $("dUndo").onclick=()=>doAction(x,"undo_ok","","已取消今天的志工紀錄");
+}
+
+/* ══════════ 長輩專屬連結 ══════════ */
+function elderUrl(token){ return new URL("peace.html", location.href).href.split("#")[0] + "#id=" + token; }
+function showLink(x){
+  const url = elderUrl(x.token);
+  const share = `這是${x.name}專用的「厝邊平安鈴」。請用長輩的手機點開下面連結，再「加入主畫面」，以後每天按一下就好：\n${url}`;
+  openSheet(`<h2>🔗 ${esc(x.name)} 的專屬平安鈴</h2>
+    <p class="d">在<b>長輩的手機</b>打開這個連結，然後「加入主畫面」。連結裡只有一組代碼，不含任何個資。<b>這組代碼等於鑰匙</b>，只交給長輩本人或家屬；外流時按「重新產生」即可讓舊連結失效。</p>
+    <p class="stat" style="word-break:break-all;font-weight:700">${esc(url)}</p>
+    <div class="acts">
+      <button class="btn primary" id="kCopy" type="button">📋 複製連結</button>
+      <button class="btn" id="kLine" type="button">💬 用 LINE 傳</button>
+    </div>
+    <p class="d" style="margin-top:10px"><b>加入主畫面：</b>iPhone 用 Safari 開啟 →「分享」→「加入主畫面」。Android 用 Chrome →「⋮」→「加到主畫面」。</p>
+    ${isManager()?`<div class="acts"><button class="btn sm warn" id="kNew" type="button">♻ 重新產生連結（舊連結失效）</button></div>`:""}
+    <div class="msg" id="kMsg"></div>
+    <div class="acts"><button class="btn ghost" onclick="closeSheet()" type="button">關閉</button></div>`);
+  $("kCopy").onclick=async()=>{ await copyText(url); $("kMsg").textContent="✅ 已複製"; };
+  $("kLine").onclick=()=>go("https://line.me/R/share?text="+encodeURIComponent(share));
+  if($("kNew")){ let armed=false; $("kNew").onclick=async()=>{
+    if(!armed){ armed=true; $("kNew").textContent="再按一次確定（長輩要重新加入主畫面）"; return; }
+    try{ const tok=await rpc("new_token"); const {error}=await sb.from("elders").update({token:tok}).eq("id",x.id); if(error) throw error;
+      await load(); const nx=BOARD.find(b=>b.id===x.id); if(nx) showLink(nx); toast("已產生新連結"); }
+    catch(e){ $("kMsg").className="msg err"; $("kMsg").textContent=e.message; }
+  }; }
+}
+
+/* ══════════ 新增／編輯長輩（里長、社工、管理者）══════════ */
+function editElder(x){
+  const isNew=!x;
+  x = x || {name:"",mode:"self",deadline:"10:00",phone:"",family_name:"",family_phone:"",note:"",primary_vol:ME.id,backup_vol:null,consent:false};
+  const vols = PROFILES.filter(p=>p.active);
+  const opt = sel => `<option value="">（未指定）</option>`+vols.map(p=>`<option value="${p.id}" ${p.id===sel?"selected":""}>${esc(p.name||"未命名")}（${ROLE[p.role]}）</option>`).join("");
+  openSheet(`<h2>${isNew?"＋ 新增長輩":"✏️ 編輯："+esc(x.name)}</h2>
+    <p class="d">只填關懷需要的資料。建議用「稱呼」（例：王阿嬤、3 鄰陳伯），不必寫全名。</p>
+    <label class="f" for="eN">稱呼</label><input type="text" id="eN" maxlength="16" value="${esc(x.name)}" placeholder="例：王阿嬤">
+    <label class="f">回報方式</label>
+    <div class="radio">
+      <label><input type="radio" name="eM" value="self" ${x.mode==="self"?"checked":""}><span><b>長輩自己按</b><br>長輩手機裝平安鈴</span></label>
+      <label><input type="radio" name="eM" value="call" ${x.mode==="call"?"checked":""}><span><b>志工打電話</b><br>不會用手機的長輩</span></label>
+    </div>
+    <div class="grid2">
+      <div><label class="f" for="eT">每天幾點前回報</label><input type="time" id="eT" value="${esc(x.deadline)}"></div>
+      <div><label class="f" for="eP">長輩電話</label><input type="tel" id="eP" value="${esc(x.phone)}" placeholder="市話或手機"></div>
+      <div><label class="f" for="eFN">家屬稱呼</label><input type="text" id="eFN" maxlength="12" value="${esc(x.family_name)}" placeholder="例：兒子阿明"></div>
+      <div><label class="f" for="eFP">家屬手機</label><input type="tel" id="eFP" value="${esc(x.family_phone)}" placeholder="09xx-xxx-xxx"></div>
+      <div><label class="f" for="ePV">主責志工</label><select id="ePV">${opt(x.primary_vol)}</select></div>
+      <div><label class="f" for="eBV">備援志工</label><select id="eBV">${opt(x.backup_vol)}</select></div>
+    </div>
+    <label class="f" for="eNote">照顧小提醒 <small>（選填，勿寫病歷）</small></label>
+    <input type="text" id="eNote" maxlength="60" value="${esc(x.note)}" placeholder="例：耳朵較重聽，電話要多響幾聲">
+    <label class="consent"><input type="checkbox" id="eC" ${x.consent?"checked":""}><span>已取得長輩（或家屬）同意，同意書由里辦公處保管。</span></label>
+    <div class="msg" id="eMsg"></div>
+    <div class="acts">
+      <button class="btn primary" id="eSave" type="button">儲存</button>
+      <button class="btn ghost" onclick="closeSheet()" type="button">取消</button>
+      ${isNew?"":`<button class="btn warn" id="eStop" type="button">停止關懷</button>`}
+    </div>`);
+  $("eSave").onclick=async()=>{
+    const m=$("eMsg"); m.className="msg err";
+    const name=$("eN").value.trim();
+    if(!name){ m.textContent="請填稱呼。"; return; }
+    if(!$("eC").checked){ m.textContent="請先取得同意並勾選，才能加入名冊。"; return; }
+    const pv=$("ePV").value||null, bv=$("eBV").value||null;
+    if(pv && pv===bv){ m.textContent="主責和備援不能是同一個人。"; return; }
+    const row={name, mode:document.querySelector("input[name=eM]:checked").value, deadline:$("eT").value||"10:00",
+      phone:$("eP").value.trim(), family_name:$("eFN").value.trim(), family_phone:$("eFP").value.trim(),
+      primary_vol:pv, backup_vol:bv, note:$("eNote").value.trim(), consent:true};
+    try{
+      let res;
+      if(isNew) res = await sb.from("elders").insert(row).select().single();
+      else res = await sb.from("elders").update(row).eq("id",x.id).select().single();
+      if(res.error) throw res.error;
+      await load(); toast("已儲存");
+      const nx=BOARD.find(b=>b.id===res.data.id);
+      if(isNew && nx && nx.mode==="self") showLink(nx); else closeSheet();
+    }catch(e){ m.textContent="儲存失敗："+e.message; }
+  };
+  if(!isNew){ let armed=false; $("eStop").onclick=async()=>{
+    if(!armed){ armed=true; $("eStop").textContent="再按一次確定（保留歷史紀錄）"; return; }
+    const {error}=await sb.from("elders").update({active:false}).eq("id",x.id);
+    if(error){ $("eMsg").textContent=error.message; return; }
+    closeSheet(); toast("已停止關懷，歷史紀錄仍保留"); load();
+  }; }
+}
+$("addBtn").onclick=()=>editElder(null);
+
+/* ══════════ 選單 ══════════ */
+$("menuBtn").onclick=()=>{
+  const pushState = !("Notification" in window) ? "這支手機的瀏覽器不支援通知"+(isIOS?"（iPhone 請先「加入主畫面」，再從主畫面打開）":"")
+    : Notification.permission==="granted" ? "✅ 已允許通知" : Notification.permission==="denied" ? "⛔ 已封鎖通知（請到瀏覽器設定開啟）" : "尚未開啟";
+  const pending = PROFILES.filter(p=>!p.active).length;
+  openSheet(`<h2>☰ 選單</h2>
+    <h3>🔔 推播通知</h3>
+    <p class="d">${pushState}。開啟後，逾時未回報、長輩按求助、案件轉交給您時，手機會跳通知。</p>
+    <div class="acts"><button class="btn primary" id="mPush" type="button">開啟這支手機的通知</button><button class="btn" id="mTest" type="button">傳一則測試</button></div>
+
+    <h3>👤 我的資料</h3>
+    <div class="grid2">
+      <div><label class="f" for="mName">稱呼</label><input type="text" id="mName" maxlength="12" value="${esc(ME.name)}"></div>
+      <div><label class="f" for="mPhone">手機 <small>（長輩「打給志工」會撥這支）</small></label><input type="tel" id="mPhone" value="${esc(ME.phone)}"></div>
+    </div>
+    <div class="acts"><button class="btn" id="mSaveMe" type="button">儲存我的資料</button><button class="btn ghost" id="mPw" type="button">改密碼</button></div>
+
+    ${isAdmin()?`<h3>⏫ 升級規則</h3>
+    <label class="f" for="mVil">里名</label><input type="text" id="mVil" value="${esc(SETTINGS.village||"")}" placeholder="例：幸福里">
+    <div class="grid2">
+      <div><label class="f" for="mB">主責幾分鐘沒處理，轉交備援</label><input type="number" id="mB" min="5" max="600" value="${SETTINGS.backup_after_min}"></div>
+      <div><label class="f" for="mC">開案幾分鐘仍未平安，通報里長／社工</label><input type="number" id="mC" min="10" max="1440" value="${SETTINGS.chief_after_min}"></div>
+    </div>
+    <div class="acts"><button class="btn" id="mSaveSet" type="button">儲存規則</button></div>
+    <h3>👥 人員管理${pending?`（${pending} 位待開通）`:""}</h3>
+    <p class="d">新帳號請到 Supabase 後台 Authentication → Users → Add user 建立，再回來這裡開通、設定角色。</p>
+    <div id="mStaff"></div>`:""}
+
+    <h3>📊 紀錄</h3>
+    <div class="acts"><button class="btn" id="mCsv" type="button">⬇️ 匯出本月紀錄（Excel 可開）</button></div>
+    ${isManager()?`<div class="acts"><button class="btn ghost" id="mImp" type="button">📂 匯入舊版平安鈴備份檔</button><input type="file" id="mFile" accept=".json,application/json" class="hide"></div>`:""}
+    <div class="msg" id="mMsg"></div>
+    <div class="acts" style="margin-top:18px"><button class="btn warn" id="mOut" type="button">登出</button><button class="btn ghost" onclick="closeSheet()" type="button">關閉</button></div>`);
+  const msg=(t,err)=>{ $("mMsg").className="msg"+(err?" err":""); $("mMsg").textContent=t; };
+  $("mPush").onclick=async()=>{ try{ await enablePush(); msg("✅ 已開啟通知"); }catch(e){ msg(e.message,true); } };
+  $("mTest").onclick=async()=>{ try{ const r=await rpc("test_push");
+      msg(!r.configured?"後端還沒設定推播（步驟 8）":!r.subscriptions?"這個帳號還沒有開啟通知的手機，請先按「開啟這支手機的通知」":"已送出，幾秒內應該會收到"); }catch(e){ msg(e.message,true); } };
+  $("mSaveMe").onclick=async()=>{ try{ await rpc("set_my_profile",{p_name:$("mName").value,p_phone:$("mPhone").value}); await load(); msg("✅ 已儲存"); }catch(e){ msg(e.message,true); } };
+  $("mPw").onclick=async()=>{ const pw=prompt("新密碼（至少 8 個字）"); if(!pw) return; if(pw.length<8){ msg("密碼太短",true); return; }
+    const {error}=await sb.auth.updateUser({password:pw}); msg(error?error.message:"✅ 密碼已更新",!!error); };
+  $("mOut").onclick=async()=>{ await sb.auth.signOut(); location.reload(); };
+  $("mCsv").onclick=exportCsv;
+  if($("mImp")){ $("mImp").onclick=()=>$("mFile").click(); $("mFile").onchange=ev=>{ const f=ev.target.files[0]; if(!f) return; const rd=new FileReader();
+    rd.onload=async()=>{ try{ const o=JSON.parse(rd.result); const r=await rpc("import_legacy",{p:o}); await load(); msg(`✅ 已匯入 ${r.elders} 位長輩、${r.records} 筆紀錄。請幫每位長輩重新傳一次新的專屬連結。`); }
+      catch(e){ msg("匯入失敗："+e.message,true); } }; rd.readAsText(f); ev.target.value=""; }; }
+  if(isAdmin()){
+    $("mSaveSet").onclick=async()=>{ const {error}=await sb.from("settings").update({village:$("mVil").value.trim(),
+      backup_after_min:+$("mB").value||30, chief_after_min:+$("mC").value||60}).eq("id",1);
+      if(error) msg(error.message,true); else { await load(); msg("✅ 規則已更新"); } };
+    $("mStaff").innerHTML = PROFILES.map(p=>`<div class="staff" data-id="${p.id}">
+      <b>${esc(p.name||"（未命名）")}</b> ${p.active?"":"<span class='pill late'>待開通</span>"}
+      <div class="grid2">
+        <input type="text" data-f="name" value="${esc(p.name)}" placeholder="稱呼">
+        <input type="tel" data-f="phone" value="${esc(p.phone)}" placeholder="手機">
+        <select data-f="role">${Object.keys(ROLE).map(r=>`<option value="${r}" ${p.role===r?"selected":""}>${ROLE[r]}</option>`).join("")}</select>
+        <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" data-f="active" ${p.active?"checked":""}> 開通</label>
+      </div>
+      <div class="acts"><button class="btn sm" data-save type="button">儲存</button></div></div>`).join("");
+    $("mStaff").querySelectorAll("[data-save]").forEach(b=>b.onclick=async()=>{
+      const box=b.closest(".staff"), g=f=>box.querySelector(`[data-f=${f}]`);
+      const {error}=await sb.from("profiles").update({name:g("name").value.trim(),phone:g("phone").value.trim(),role:g("role").value,active:g("active").checked}).eq("id",box.dataset.id);
+      if(error) msg(error.message,true); else { await load(); msg("✅ 已更新 "+g("name").value); }
+    });
+  }
+};
+
+async function exportCsv(){
+  const d=new Date(), ym=d.getFullYear()+"-"+pad(d.getMonth()+1);
+  try{
+    const rows=await rpc("month_report",{p_month:ym});
+    const out=[["日期","稱呼","回報方式","狀態","平安時間","處理階段","處理紀錄"]];
+    rows.forEach(r=>out.push([r.day,r.name,r.mode==="call"?"電話問安":"自己按",DAYST[r.status]||r.status,r.ok_at||"",r.stage?STAGE[r.stage]:"",r.events||""]));
+    const csv="\ufeff"+out.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+    download(`平安鈴紀錄_${SETTINGS.village||"本里"}_${ym}.csv`,csv,"text/csv");
+    toast("✅ 已匯出");
+  }catch(e){ toast("匯出失敗："+e.message,4000); }
+}
+
+/* ══════════ 推播 ══════════ */
+function b64uToU8(s){ const p="=".repeat((4-s.length%4)%4); const b=atob((s+p).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from(b,c=>c.charCodeAt(0)); }
+async function enablePush(){
+  if(!("serviceWorker" in navigator) || !("PushManager" in window))
+    throw new Error(isIOS?"iPhone 要先用 Safari「分享 → 加入主畫面」，再從主畫面的「關懷工作台」打開，才能開啟通知（iOS 16.4 以上）。":"這個瀏覽器不支援推播，請改用 Chrome。");
+  if(!CFG.vapidPublicKey) throw new Error("config.js 還沒填推播公鑰（vapidPublicKey）。");
+  const reg = await navigator.serviceWorker.register("sw.js");
+  await navigator.serviceWorker.ready;
+  const perm = await Notification.requestPermission();
+  if(perm!=="granted") throw new Error("沒有允許通知。請到瀏覽器設定，允許這個網站傳送通知。");
+  let sub = await reg.pushManager.getSubscription();
+  if(!sub) sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64uToU8(CFG.vapidPublicKey)});
+  const j=sub.toJSON();
+  await rpc("save_subscription",{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth,p_ua:navigator.userAgent});
+}
+
+/* ══════════ 資料載入與即時同步 ══════════ */
+let liveOk=false, loadTimer=null;
+async function load(){
+  const [b,s,p] = await Promise.all([
+    rpc("board_today"),
+    sb.from("settings").select("*").eq("id",1).single(),
+    sb.from("profiles").select("*").order("created_at")
+  ]);
+  BOARD=b||[]; SETTINGS=s.data||{}; PROFILES=p.data||[];
+  ME = PROFILES.find(x=>x.id===ME.id) || ME;
+  lastLoad=new Date(); $("syncTxt").textContent="更新於 "+tm(lastLoad);
+  render();
+}
+function bump(){ clearTimeout(loadTimer); loadTimer=setTimeout(()=>load().catch(()=>{}),700); }
+function syncTabs(){ document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.t===TAB)); }
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{ TAB=t.dataset.t; if(TAB==="todo") FILTER=null; syncTabs(); render(); });
+$("onlyMine").onchange=()=>{ try{localStorage.setItem("pb2_onlyMine",$("onlyMine").checked?"1":"");}catch(e){} render(); };
+
+function show(v){ ["loginView","waitView","mainView"].forEach(id=>$(id).classList.toggle("hide",id!==v)); }
+
+async function start(session){
+  const uid=session.user.id;
+  const {data:me}=await sb.from("profiles").select("*").eq("id",uid).single();
+  if(!me || !me.active){ show("waitView"); $("wId").textContent=(session.user.email||"")+"\n"+uid; return; }
+  ME=me; show("mainView");
+  try{ $("onlyMine").checked = localStorage.getItem("pb2_onlyMine")==="1"; }catch(e){}
+  await load();
+  sb.channel("peacebell")
+    .on("postgres_changes",{event:"*",schema:"public",table:"checkins"},bump)
+    .on("postgres_changes",{event:"*",schema:"public",table:"cases"},bump)
+    .on("postgres_changes",{event:"*",schema:"public",table:"case_events"},bump)
+    .subscribe(st=>{ liveOk = st==="SUBSCRIBED"; render(); });
+  setInterval(()=>{ if(!$("dlg").classList.contains("on")) load().catch(()=>{}); },60000);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) load().catch(()=>{}); });
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+  const want=new URLSearchParams(location.search).get("e");
+  if(want){ const x=BOARD.find(b=>b.id===want); if(x){ const k=cat(x); if(k==="late"||k==="help"){ TAB="todo"; } showDetail(x); } history.replaceState(null,"","care.html"); }
+}
+
+(async function boot(){
+  if(!window.supabase || !CFG.url || /你的/.test(CFG.url)){
+    document.body.innerHTML='<div class="login"><div class="card"><h1>還差一步</h1><p class="d">請先打開 config.js，填入 Supabase 的網址與 key。</p></div></div>'; return;
+  }
+  sb = window.supabase.createClient(CFG.url, CFG.key);
+  $("lGo").onclick=async()=>{
+    $("lMsg").className="msg"; $("lMsg").textContent="登入中…";
+    const {data,error}=await sb.auth.signInWithPassword({email:$("lEmail").value.trim(),password:$("lPw").value});
+    if(error){ $("lMsg").className="msg err"; $("lMsg").textContent="登入失敗：帳號或密碼不正確"; return; }
+    start(data.session);
+  };
+  $("lPw").addEventListener("keydown",e=>{ if(e.key==="Enter") $("lGo").click(); });
+  $("wOut").onclick=async()=>{ await sb.auth.signOut(); location.reload(); };
+  const {data:{session}}=await sb.auth.getSession();
+  if(session) start(session); else show("loginView");
+})();
+</script>
+</body>
+</html>

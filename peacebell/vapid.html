@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>推播金鑰產生器｜厝邊平安鈴</title><meta name="robots" content="noindex">
+<style>
+  body{font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;background:#FBF5E9;color:#33302A;max-width:680px;margin:0 auto;padding:24px 16px;line-height:1.7}
+  h1{font-size:1.4rem;color:#1F5F73} button{font:inherit;font-weight:800;background:#1F5F73;color:#fff;border:none;border-radius:12px;padding:12px 18px;cursor:pointer}
+  label{display:block;font-weight:700;margin-top:16px} textarea{width:100%;font-family:monospace;font-size:.9rem;border:2px solid #E4D9C3;border-radius:10px;padding:8px;min-height:64px}
+  .warn{background:#F9E2DE;color:#8E2A20;border-radius:10px;padding:10px 12px;margin-top:14px;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>🔑 推播金鑰（VAPID）產生器</h1>
+<p>這一頁只在您的瀏覽器裡計算，不會傳到任何地方。只需要做一次。</p>
+<button id="gen" type="button">產生一組新金鑰</button>
+<label for="pub">① 公鑰 → 貼到 <b>config.js</b> 的 vapidPublicKey，也貼到 Supabase Secrets 的 <b>VAPID_PUBLIC_KEY</b></label>
+<textarea id="pub" readonly></textarea>
+<label for="pri">② 私鑰 → 只貼到 Supabase Secrets 的 <b>VAPID_PRIVATE_KEY</b></label>
+<textarea id="pri" readonly></textarea>
+<p class="warn">⚠ 私鑰不要放進 GitHub、不要傳到群組。產生後請關掉這一頁。<br>如果之後換了金鑰，所有志工都要重新按一次「開啟這支手機的通知」。</p>
+<script>
+const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+document.getElementById("gen").onclick = async () => {
+  const k = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+  document.getElementById("pub").value = b64u(await crypto.subtle.exportKey("raw", k.publicKey));
+  document.getElementById("pri").value = (await crypto.subtle.exportKey("jwk", k.privateKey)).d;
+};
+</script>
+</body>
+</html>
