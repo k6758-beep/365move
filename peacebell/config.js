@@ -4,7 +4,7 @@
    絕對不要放 service_role / secret key。
    vapidPublicKey：用 vapid.html 產生的「公鑰」（推播用，步驟 7）                */
 window.PEACE_CONFIG = {
-  url: "https://khihtobjgarnrjgapytr.supabase.co",
+  url: "https://khihtobjgarnrjgapytr.supabase.co/functions/v1/send-push",
   key: "sb_publishable_ufrwdXEDOVtw_yoGb09uig_VtqgYLzY",
   vapidPublicKey: "BHYBe6dwXHESslESnN4t88IMwnDWDfaYIynlC4wB5JxIb04x0jukZHbaCuuHNa8zVr7vbAHJ3qGaJnTsWr7yWYc"
 };
